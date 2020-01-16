@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<widget id="ResourcePlanner.widget.ResourcePlanner" needsEntityContext="false" xmlns="http://www.mendix.com/widget/1.0/">
+    <name>ResourcePlanner</name>
+    <description>Render an agenda style calendar widget</description>
+
+    <icon />
+    <properties>
+        <!-- Search -->
+        <property key="searchEntity" type="entity" isPath="no" allowNonPersistableEntities="true" required="false">
+            <caption>Search entity</caption>
+            <category>Search</category>
+            <description>Entity: The entity used to control the search filters (Needs to be in context)</description>
+        </property>
+        <property key="searchDateFrom" type="attribute" entityProperty="searchEntity" required="true">
+            <caption>From date</caption>
+            <category>Search</category>
+            <description></description>
+            <attributeTypes>
+                <attributeType name="DateTime" />
+            </attributeTypes>
+        </property>
+        <property key="searchDateTo" type="attribute" entityProperty="searchEntity" required="true">
+            <caption>To date</caption>
+            <category>Search</category>
+            <description></description>
+            <attributeTypes>
+                <attributeType name="DateTime" />
+            </attributeTypes>
+        </property>
+
+        <!-- Date bar -->
+        <property key="dateBar" type="entity" isPath="no" allowNonPersistableEntities="false" required="true">
+            <caption>Date bar entity</caption>
+            <category>Date bar</category>
+            <description>Entity: The entity used to retrieve the datebars</description>
+        </property>
+        <property key="startDate" type="attribute" entityProperty="dateBar" required="true">
+            <caption>Start date</caption>
+            <category>Date bar</category>
+            <description></description>
+            <attributeTypes>
+                <attributeType name="DateTime" />
+            </attributeTypes>
+        </property>
+        <property key="endDate" type="attribute" entityProperty="dateBar" required="true">
+            <caption>End date</caption>
+            <category>Date bar</category>
+            <description></description>
+            <attributeTypes>
+                <attributeType name="DateTime" />
+            </attributeTypes>
+        </property>
+        <property key="barType" type="attribute" isPath="optional" pathType="reference" entityProperty="dateBar" required="false">
+            <caption>Type</caption>
+            <category>Date bar</category>
+            <description></description>
+            <attributeTypes>
+                <attributeType name="String" />
+                <attributeType name="Enum" />
+            </attributeTypes>
+        </property>
+
+        <!-- Person -->
+        <property key="person" type="entity" isPath="yes" pathType="reference" allowNonPersistableEntities="false" required="true" entityProperty="dateBar">
+            <caption>Person entity</caption>
+            <category>Person</category>
+            <description>Entity: The entity used to retrieve the person (linked to 'Date bar entity')</description>
+        </property>
+        <property key="fullname" type="attribute" entityProperty="person" required="true">
+            <caption>Full name</caption>
+            <category>Person</category>
+            <description></description>
+            <attributeTypes>
+                <attributeType name="String" />
+            </attributeTypes>
+        </property>
+        <property key="category" type="attribute" isPath="optional" pathType="reference" entityProperty="person" required="true">
+            <caption>Category</caption>
+            <category>Person</category>
+            <description></description>
+            <attributeTypes>
+                <attributeType name="String" />
+                <attributeType name="Enum" />
+            </attributeTypes>
+        </property>
+        <property key="description" type="attribute" entityProperty="person" required="false">
+            <caption>Description</caption>
+            <category>Person</category>
+            <description></description>
+            <attributeTypes>
+                <attributeType name="String" />
+            </attributeTypes>
+        </property>
+    </properties>
+</widget>

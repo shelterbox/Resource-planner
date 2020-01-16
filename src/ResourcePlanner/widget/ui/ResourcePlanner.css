@@ -1,0 +1,71 @@
+.rp-scroll-wrapper {
+  overflow-x: scroll;
+  width: 80%;
+  margin-left: auto; }
+  .rp-scroll-wrapper > .rp-scroll {
+    height: 1px; }
+
+.rp-group-wrapper, .rp-group-list {
+  display: flex;
+  position: relative;
+  flex-direction: row;
+  flex-wrap: wrap;
+  overflow: hidden; }
+  .rp-group-wrapper .rp-group-left, .rp-group-list .rp-group-left {
+    width: 20%;
+    background: #FFFFFF;
+    position: relative;
+    z-index: 1; }
+  .rp-group-wrapper .rp-group-right, .rp-group-list .rp-group-right {
+    width: 80%;
+    overflow: hidden;
+    box-shadow: -1px 0 0 inset #D7D7D7, 1px 0 0 inset #D7D7D7; }
+  .rp-group-wrapper .rp-group-list, .rp-group-list .rp-group-list {
+    width: 100%; }
+  .rp-group-wrapper .rp-label-date, .rp-group-list .rp-label-date {
+    display: inline-block;
+    overflow: hidden; }
+  .rp-group-wrapper .rp-heading, .rp-group-list .rp-heading {
+    border: 0;
+    box-shadow: none; }
+  .rp-group-wrapper .rp-label, .rp-group-list .rp-label {
+    font-weight: bold;
+    line-height: 28px;
+    border-bottom: 1px solid #D7D7D7; }
+    .rp-group-wrapper .rp-label.rp-group-right .rp-scroller, .rp-group-list .rp-label.rp-group-right .rp-scroller {
+      display: flex; }
+      .rp-group-wrapper .rp-label.rp-group-right .rp-scroller .rp-label-date, .rp-group-list .rp-label.rp-group-right .rp-scroller .rp-label-date {
+        text-align: center;
+        display: block; }
+        .rp-group-wrapper .rp-label.rp-group-right .rp-scroller .rp-label-date .rp-line, .rp-group-list .rp-label.rp-group-right .rp-scroller .rp-label-date .rp-line {
+          position: absolute;
+          width: 1px;
+          height: calc(100% - 80px);
+          background: #D7D7D7; }
+    .rp-group-wrapper .rp-label.rp-group-left > span, .rp-group-list .rp-label.rp-group-left > span {
+      padding: 0 10px; }
+  .rp-group-wrapper .rp-group-list .rp-row, .rp-group-list .rp-group-list .rp-row {
+    border-bottom: 1px solid #D7D7D7; }
+    .rp-group-wrapper .rp-group-list .rp-row.rp-group-right .rp-scroller, .rp-group-list .rp-group-list .rp-row.rp-group-right .rp-scroller {
+      padding: 5px 0 10px 0;
+      min-height: 52px; }
+      .rp-group-wrapper .rp-group-list .rp-row.rp-group-right .rp-scroller .rp-datebar, .rp-group-list .rp-group-list .rp-row.rp-group-right .rp-scroller .rp-datebar {
+        margin-top: 5px;
+        height: 32px;
+        padding: 5px;
+        border-radius: 4px; }
+        .rp-group-wrapper .rp-group-list .rp-row.rp-group-right .rp-scroller .rp-datebar .rp-datebar-label, .rp-group-list .rp-group-list .rp-row.rp-group-right .rp-scroller .rp-datebar .rp-datebar-label {
+          position: relative;
+          display: inline-block;
+          padding: 1px 6px;
+          border-radius: 3px;
+          overflow: hidden;
+          height: 22px;
+          background: rgba(0, 0, 0, 0.3);
+          color: #FFFFFF;
+          margin-right: 8px;
+          transition: 0.2s background ease; }
+    .rp-group-wrapper .rp-group-list .rp-row.rp-group-left > div:first-child, .rp-group-list .rp-group-list .rp-row.rp-group-left > div:first-child {
+      padding: 7px 10px 0 10px; }
+      .rp-group-wrapper .rp-group-list .rp-row.rp-group-left > div:first-child + div, .rp-group-list .rp-group-list .rp-row.rp-group-left > div:first-child + div {
+        padding: 0px 10px 7px 10px; }

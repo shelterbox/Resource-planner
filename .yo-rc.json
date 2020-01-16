@@ -1,0 +1,11 @@
+{
+  "generator-mendix": {
+    "promptValues": {
+      "copyright": "ShelterBox Trust",
+      "license": "Apache 2",
+      "author": "Carter Moorse",
+      "boilerplate": "empty",
+      "widgetoptions": []
+    }
+  }
+}
