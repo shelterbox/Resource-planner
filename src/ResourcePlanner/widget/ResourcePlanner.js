@@ -58,7 +58,6 @@ define([
         _domNodes: {},
         _values: {},
         _categories: {},
-        _categoryPath: null,
         _XPath: {
             people: null
         },
@@ -70,18 +69,18 @@ define([
             if (this.domNode) this.domNode.innerHTML = "";
         },
 
-        _scroll: function (amount) {
+        _scroll: function (_amount) {
             var context = this;
 
             var options = {
-                left: amount,
+                left: _amount,
                 top: 0
             }
 
-            Object.keys(context._categories).forEach(function(text) {
-                var tableContext = context._domNodes[text];
+            Object.keys(context._categories).forEach(function(_text) {
+                var tableContext = context._domNodes[_text];
                 tableContext.heading.right.scrollTo(options);
-                tableContext.label.scroller.style.marginLeft = (amount * -1) + "px";
+                tableContext.label.scroller.style.marginLeft = (_amount * -1) + "px";
                 tableContext.list.items.forEach(function(item) {
                     item.right.scrollTo(options);
                 });
@@ -94,78 +93,64 @@ define([
                 // Add shadow to right side
             });
         },
-        
-        _getCategory: function (guid, callback) {
+
+        _renderDateBars: function (_datebar, _nodes) {
             var context = this;
 
-            var xpath = this._XPath.people + "[id=\"" + guid + "\"]";
-            if (context._categoryPath.length > 1) {
-                for (var x = 0; x < context._categoryPath.length - 1; x++) xpath = xpath + "/" + context._categoryPath[x];
-            }
-            mx.data.get({
-                xpath: xpath,
-                callback: function(objs) {
-                    var value = objs[0].get(context._categoryPath[context._categoryPath.length > 1 ? context._categoryPath.length - 1 : 0]);
-                    callback(value);
+            _datebar.fetch(context.barType, function(value) {
+                // Create datebar settings from data
+                var datebar = {
+                    startDate: new Date(_datebar.get(context.startDate)),
+                    endDate: new Date(_datebar.get(context.endDate)),
+                    type: context._barTypePath ? (value ? value : null) : null,
+                    backgroundColour: "#0595DB"
+                };
+                
+                // Generate datebar style from settings
+                var options = {
+                    "margin-left": datebar.startDate > context.dateFrom ? ((context.dateFrom.daysBetween(datebar.startDate) - 1) / context._values.daysBetween * 100) + "%" : "0%",
+                    "width": calcWidth(),
+                    "background-color": datebar.backgroundColour
+                };
+
+                function calcWidth() {
+                    // If event sits between 'From' query
+                    if (datebar.startDate <= context.dateFrom && (datebar.endDate >= context.dateFrom && datebar.endDate <= context.dateTo)) return ((context.dateFrom.daysBetween(datebar.endDate)) / context._values.daysBetween * 100) + "%";
+                    // If event sits between 'To' query
+                    else if ((datebar.startDate <= context.dateTo && datebar.startDate >= context.dateFrom) && datebar.endDate >= context.dateTo) return ((datebar.startDate.daysBetween(context.dateTo) + 2) / context._values.daysBetween * 100) + "%";
+                    // If event sits over the query
+                    else if (datebar.startDate <= context.dateFrom && datebar.endDate >= context.dateTo) return "100%";
+                    // Standard return
+                    return ((datebar.startDate.daysBetween(datebar.endDate) + 1) / context._values.daysBetween * 100) + "%";
                 }
+
+                // Create datebar node
+                datebar.node = dojo.create("div", {
+                    class: "rp-datebar",
+                    innerHTML: "<div class=\"rp-datebar-label\">" + (datebar.type ? datebar.type + ": " : "") + datebar.startDate.formatDate() + " - " + datebar.endDate.formatDate() + "</div>"
+                }, _nodes.scroller);
+
+                // Set datebar style
+                dojoStyle.set(datebar.node, options);
             });
         },
 
-        _renderDateBars: function (datebar, nodes) {
+        _renderPerson: function (_person) {
             var context = this;
 
-            // Create datebar settings from data
-            var datebar = {
-                startDate: new Date(datebar.get(context.startDate)),
-                endDate: new Date(datebar.get(context.endDate)),
-                type: context.barType ? (datebar.get(context.barType) ? datebar.get(context.barType) : null) : null,
-                backgroundColour: "#0595DB"
-            };
-            
-            // Generate datebar style from settings
-            var options = {
-                "margin-left": datebar.startDate > context.dateFrom ? ((context.dateFrom.daysBetween(datebar.startDate) - 1) / context._values.daysBetween * 100) + "%" : "0%",
-                "width": calcWidth(),
-                "background-color": datebar.backgroundColour
-            };
-
-            function calcWidth() {
-                // If event sits between 'From' query
-                if (datebar.startDate <= context.dateFrom && (datebar.endDate >= context.dateFrom && datebar.endDate <= context.dateTo)) return ((context.dateFrom.daysBetween(datebar.endDate)) / context._values.daysBetween * 100) + "%";
-                // If event sits between 'To' query
-                else if ((datebar.startDate <= context.dateTo && datebar.startDate >= context.dateFrom) && datebar.endDate >= context.dateTo) return ((datebar.startDate.daysBetween(context.dateTo) + 2) / context._values.daysBetween * 100) + "%";
-                // If event sits over the query
-                else if (datebar.startDate <= context.dateFrom && datebar.endDate >= context.dateTo) return "100%";
-                // Standard return
-                return ((datebar.startDate.daysBetween(datebar.endDate) + 1) / context._values.daysBetween * 100) + "%";
-            }
-
-            // Create datebar node
-            datebar.node = dojo.create("div", {
-                class: "rp-datebar",
-                innerHTML: "<div class=\"rp-datebar-label\">" + (datebar.type ? datebar.type + ": " : "") + datebar.startDate.formatDate() + " - " + datebar.endDate.formatDate() + "</div>"
-            }, nodes.scroller);
-
-            // Set datebar style
-            dojoStyle.set(datebar.node, options);
-        },
-
-        _renderPerson: function (person) {
-            var context = this;
-
-            context._getCategory(person, function(value) {               
+            _person.fetch(context.category, function(_value) {               
                 // Check if category exists
-                if (!context._categories[value]) {
-                    context._renderSection(value);
-                    context._categories[value] = true;
+                if (!context._categories[_value]) {
+                    context._renderSection(_value);
+                    context._categories[_value] = true;
                 }
 
                 // Save object context
-                var objContext = context._domNodes[value];
+                var objContext = context._domNodes[_value];
 
                 // HTML Variables
-                var personHTML = person.get(context.fullname) ? "<div>" + person.get(context.fullname) + "</div>" : "<div>N/A</div>";
-                var descriptionHTML = context.description ? (person.get(context.description) ? "<div>" + person.get(context.description) + "</div>" : "") : "";
+                var personHTML = _person.get(context.fullname) ? "<div>" + _person.get(context.fullname) + "</div>" : "<div>N/A</div>";
+                var descriptionHTML = context.description ? (_person.get(context.description) ? "<div>" + _person.get(context.description) + "</div>" : "") : "";
 
                 // Render people
                 var personNodes = {
@@ -179,7 +164,7 @@ define([
 
                 // Get datebars
                 mx.data.get({
-                    guid: person.getGuid(),
+                    guid: _person.getGuid(),
                     path: context._dateBarPath[0],
                     callback: function(objs) {
                         objs.forEach(function(obj) { context._renderDateBars(obj, personNodes); });
@@ -191,7 +176,7 @@ define([
             });
         },
 
-        _renderSection: function (value) {
+        _renderSection: function (_value) {
             var context = this;
 
             // Scrollbar events
@@ -239,7 +224,7 @@ define([
                 left: dojo.create("div", {class: "rp-heading rp-group-left"}, tableContext.wrapper),
                 right: dojo.create("div", {class: "rp-heading rp-group-right"}, tableContext.wrapper)
             };
-            tableContext.heading.title = dojo.create("h3", {class: "rp-group-title", innerHTML: value}, tableContext.heading.left);
+            tableContext.heading.title = dojo.create("h3", {class: "rp-group-title", innerHTML: _value}, tableContext.heading.left);
             tableContext.heading.scroller = dojo.create("div", {class: "rp-scroller", innerHTML: gMonthLabels(tableContext), style: "width: " + context._values.scrollWidth + "%"}, tableContext.heading.right);
 
             // Label
@@ -258,7 +243,7 @@ define([
                 items: []
             };
 
-            this._domNodes[value] = tableContext;
+            this._domNodes[_value] = tableContext;
         },
 
         _renderTable: function () {
@@ -303,7 +288,6 @@ define([
             var endXpathFilter = "[" + context.startDate + " < " + this.dateTo.valueOf() + " or " + context.endDate + " < " + this.dateTo.valueOf() + "]";
 
             // Instantiate variables
-            this._categoryPath = this.category ? this.category.split("/") : null;
             this._dateBarPath = this.person ? this.person.split("/") : null;
             this._XPath.people = "//" + context.dateBar + startXpathFilter + endXpathFilter + "/" + context.person;
 
