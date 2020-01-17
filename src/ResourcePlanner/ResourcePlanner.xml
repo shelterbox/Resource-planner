@@ -6,12 +6,12 @@
     <icon />
     <properties>
         <!-- Search -->
-        <property key="searchEntity" type="entity" isPath="no" allowNonPersistableEntities="true" required="false">
+        <property key="search" type="entity" isPath="no" allowNonPersistableEntities="true" required="false">
             <caption>Search entity</caption>
             <category>Search</category>
             <description>Entity: The entity used to control the search filters (Needs to be in context)</description>
         </property>
-        <property key="searchDateFrom" type="attribute" entityProperty="searchEntity" required="true">
+        <property key="search_dateFrom" type="attribute" entityProperty="search" required="true">
             <caption>From date</caption>
             <category>Search</category>
             <description></description>
@@ -19,7 +19,7 @@
                 <attributeType name="DateTime" />
             </attributeTypes>
         </property>
-        <property key="searchDateTo" type="attribute" entityProperty="searchEntity" required="true">
+        <property key="search_dateTo" type="attribute" entityProperty="search" required="true">
             <caption>To date</caption>
             <category>Search</category>
             <description></description>
@@ -28,64 +28,78 @@
             </attributeTypes>
         </property>
 
-        <!-- Date bar -->
-        <property key="dateBar" type="entity" isPath="no" allowNonPersistableEntities="false" required="true">
-            <caption>Date bar entity</caption>
-            <category>Date bar</category>
-            <description>Entity: The entity used to retrieve the datebars</description>
+        <!-- Event -->
+        <property key="event" type="entity" isPath="no" allowNonPersistableEntities="false" required="true">
+            <caption>Event entity</caption>
+            <category>Event</category>
+            <description>Entity: Event</description>
         </property>
-        <property key="startDate" type="attribute" entityProperty="dateBar" required="true">
+        <property key="event_startDate" type="attribute" entityProperty="event" required="true">
             <caption>Start date</caption>
-            <category>Date bar</category>
-            <description></description>
+            <category>Event</category>
+            <description>Attribute: Start of event</description>
             <attributeTypes>
                 <attributeType name="DateTime" />
             </attributeTypes>
         </property>
-        <property key="endDate" type="attribute" entityProperty="dateBar" required="true">
+        <property key="event_endDate" type="attribute" entityProperty="event" required="true">
             <caption>End date</caption>
-            <category>Date bar</category>
-            <description></description>
+            <category>Event</category>
+            <description>Attribute: End of event</description>
             <attributeTypes>
                 <attributeType name="DateTime" />
             </attributeTypes>
         </property>
-        <property key="barType" type="attribute" isPath="optional" pathType="reference" entityProperty="dateBar" required="false">
+        <property key="event_type" type="attribute" isPath="optional" pathType="reference" entityProperty="event" required="false">
             <caption>Type</caption>
-            <category>Date bar</category>
-            <description></description>
+            <category>Event</category>
+            <description>Attribute: Type label</description>
+            <attributeTypes>
+                <attributeType name="String" />
+                <attributeType name="Enum" />
+            </attributeTypes>
+        </property>
+        <property key="event_colour" type="attribute" isPath="optional" pathType="reference" entityProperty="event" required="false">
+            <caption>Bar colour</caption>
+            <category>Event</category>
+            <description>Attribute: CSS colour (eg: '#DB3E3E', 'rgb(219, 62, 62)')</description>
             <attributeTypes>
                 <attributeType name="String" />
                 <attributeType name="Enum" />
             </attributeTypes>
         </property>
 
-        <!-- Person -->
-        <property key="person" type="entity" isPath="yes" pathType="reference" allowNonPersistableEntities="false" required="true" entityProperty="dateBar">
-            <caption>Person entity</caption>
-            <category>Person</category>
-            <description>Entity: The entity used to retrieve the person (linked to 'Date bar entity')</description>
+        <!-- Resource -->
+        <property key="resource" type="entity" isPath="yes" pathType="reference" allowNonPersistableEntities="false" required="true" entityProperty="event">
+            <caption>Resource entity</caption>
+            <category>Resource</category>
+            <description>Entity: The entity used to retrieve the resource (linked to 'Date bar entity')</description>
         </property>
-        <property key="fullname" type="attribute" entityProperty="person" required="true">
+        <property key="resource_name" type="attribute" entityProperty="resource" required="true">
             <caption>Full name</caption>
-            <category>Person</category>
+            <category>Resource</category>
             <description></description>
             <attributeTypes>
                 <attributeType name="String" />
             </attributeTypes>
         </property>
-        <property key="category" type="attribute" isPath="optional" pathType="reference" entityProperty="person" required="true">
+        <property key="resource_category" type="attribute" isPath="optional" pathType="reference" entityProperty="resource" required="false">
             <caption>Category</caption>
-            <category>Person</category>
-            <description></description>
+            <category>Resource</category>
+            <description>Attribute: Seperated planner categories (Leave blank for hardcoded title)</description>
             <attributeTypes>
                 <attributeType name="String" />
                 <attributeType name="Enum" />
             </attributeTypes>
         </property>
-        <property key="description" type="attribute" entityProperty="person" required="false">
+        <property key="resource_title" type="string" required="false">
+            <caption>Title</caption>
+            <category>Resource</category>
+            <description>String: Hardcoded planner title</description>
+        </property>
+        <property key="resource_description" type="attribute" entityProperty="resource" required="false">
             <caption>Description</caption>
-            <category>Person</category>
+            <category>Resource</category>
             <description></description>
             <attributeTypes>
                 <attributeType name="String" />

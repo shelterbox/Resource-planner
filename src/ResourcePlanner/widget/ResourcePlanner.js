@@ -34,25 +34,27 @@ define([
         // Internal variables
         _handles: null,
         _contextObj: null,
-        dateFrom: null,
-        dateTo: null, 
+        obj_dateFrom: null,
+        obj_dateTo: null, 
 
         // Search source
-        searchEntity: null,
-        searchDateFrom: null,
-        searchDateTo: null,
+        search: null,
+        search_dateFrom: null,
+        search_dateTo: null,
 
         // Date bar source
-        dateBar: null,
-        startDate: null,
-        endDate: null,
-        barType: null,
+        event: null,
+        event_startDate: null,
+        event_endDate: null,
+        event_type: null,
+        event_colour: null,
 
         // Person source
-        person: null,
-        fullname: null,
-        category: null,
-        description: null,
+        resource: null,
+        resource_name: null,
+        resource_category: null,
+        resource_title: null,
+        resource_description: null,
 
         // Saved objects
         _domNodes: {},
@@ -94,86 +96,100 @@ define([
             });
         },
 
-        _renderDateBars: function (_datebar, _nodes) {
+        _path: function (str_path, obj_context, func_callback) { 
+            if (str_path) {
+                obj_context.fetch(str_path, func_callback);
+            }
+            else func_callback(null);
+         },
+
+        _renderDateBars: function (_datebar, _nodes, _barType, _barColour) {
             var context = this;
 
-            _datebar.fetch(context.barType, function(value) {
-                // Create datebar settings from data
-                var datebar = {
-                    startDate: new Date(_datebar.get(context.startDate)),
-                    endDate: new Date(_datebar.get(context.endDate)),
-                    type: context._barTypePath ? (value ? value : null) : null,
-                    backgroundColour: "#0595DB"
-                };
-                
-                // Generate datebar style from settings
-                var options = {
-                    "margin-left": datebar.startDate > context.dateFrom ? ((context.dateFrom.daysBetween(datebar.startDate) - 1) / context._values.daysBetween * 100) + "%" : "0%",
-                    "width": calcWidth(),
-                    "background-color": datebar.backgroundColour
-                };
+            // Create datebar settings from data
+            var datebar = {
+                startDate: new Date(_datebar.get(context.event_startDate)),
+                endDate: new Date(_datebar.get(context.event_endDate)),
+                type: _barType ? _barType : null,
+                backgroundColour: _barColour ? _barColour : "#0595DB"
+            };
+            
+            // Generate datebar style from settings
+            var options = {
+                "margin-left": datebar.startDate > context.obj_dateFrom ? ((context.obj_dateFrom.daysBetween(datebar.startDate) - 1) / context._values.daysBetween * 100) + "%" : "0%",
+                "width": calcWidth(),
+                "background-color": datebar.backgroundColour
+            };
 
-                function calcWidth() {
-                    // If event sits between 'From' query
-                    if (datebar.startDate <= context.dateFrom && (datebar.endDate >= context.dateFrom && datebar.endDate <= context.dateTo)) return ((context.dateFrom.daysBetween(datebar.endDate)) / context._values.daysBetween * 100) + "%";
-                    // If event sits between 'To' query
-                    else if ((datebar.startDate <= context.dateTo && datebar.startDate >= context.dateFrom) && datebar.endDate >= context.dateTo) return ((datebar.startDate.daysBetween(context.dateTo) + 2) / context._values.daysBetween * 100) + "%";
-                    // If event sits over the query
-                    else if (datebar.startDate <= context.dateFrom && datebar.endDate >= context.dateTo) return "100%";
-                    // Standard return
-                    return ((datebar.startDate.daysBetween(datebar.endDate) + 1) / context._values.daysBetween * 100) + "%";
-                }
+            function calcWidth() {
+                // If event sits between 'From' query
+                if (datebar.startDate <= context.obj_dateFrom && (datebar.endDate >= context.obj_dateFrom && datebar.endDate <= context.obj_dateTo)) return ((context.obj_dateFrom.daysBetween(datebar.endDate)) / context._values.daysBetween * 100) + "%";
+                // If event sits between 'To' query
+                else if ((datebar.startDate <= context.obj_dateTo && datebar.startDate >= context.obj_dateFrom) && datebar.endDate >= context.obj_dateTo) return ((datebar.startDate.daysBetween(context.obj_dateTo) + 2) / context._values.daysBetween * 100) + "%";
+                // If event sits over the query
+                else if (datebar.startDate <= context.obj_dateFrom && datebar.endDate >= context.obj_dateTo) return "100%";
+                // Standard return
+                return ((datebar.startDate.daysBetween(datebar.endDate) + 1) / context._values.daysBetween * 100) + "%";
+            }
 
-                // Create datebar node
-                datebar.node = dojo.create("div", {
-                    class: "rp-datebar",
-                    innerHTML: "<div class=\"rp-datebar-label\">" + (datebar.type ? datebar.type + ": " : "") + datebar.startDate.formatDate() + " - " + datebar.endDate.formatDate() + "</div>"
-                }, _nodes.scroller);
+            // Create datebar node
+            datebar.node = dojo.create("div", {
+                class: "rp-datebar",
+                innerHTML: "<div class=\"rp-datebar-label\">" + (datebar.type ? datebar.type + ": " : "") + datebar.startDate.formatDate() + " - " + datebar.endDate.formatDate() + "</div>"
+            }, _nodes.scroller);
 
-                // Set datebar style
-                dojoStyle.set(datebar.node, options);
-            });
+            // Set datebar style
+            dojoStyle.set(datebar.node, options);
         },
 
-        _renderPerson: function (_person) {
+        _renderPerson: function (_personObj, _categoryStr) {
             var context = this;
 
-            _person.fetch(context.category, function(_value) {               
-                // Check if category exists
-                if (!context._categories[_value]) {
-                    context._renderSection(_value);
-                    context._categories[_value] = true;
+            if (!_categoryStr) _categoryStr = context.resource_title ? context.resource_title : "Planner";
+
+            // Check if category exists
+            if (!context._categories[_categoryStr]) {
+                context._renderSection(_categoryStr);
+                context._categories[_categoryStr] = true;
+            }
+
+            // Save object context
+            var objContext = context._domNodes[_categoryStr];
+
+            // HTML Variables
+            var personHTML = _personObj.get(context.resource_name) ? "<div>" + _personObj.get(context.resource_name) + "</div>" : "<div>N/A</div>";
+            var descriptionHTML = context.resource_description ? (_personObj.get(context.resource_description) ? "<div>" + _personObj.get(context.resource_description) + "</div>" : "") : "";
+
+            // Render people
+            var personNodes = {
+                left: dojo.create("div", {
+                    class: "rp-row rp-group-left",
+                    innerHTML: personHTML +  descriptionHTML
+                }, objContext.list.list),
+                right: dojo.create("div", {class: "rp-row rp-group-right"}, objContext.list.list)
+            };
+            personNodes.scroller = dojo.create("div", {class: "rp-scroller", style: "width: " + context._values.scrollWidth + "%"}, personNodes.right);
+
+            // Get datebars
+            mx.data.get({
+                guid: _personObj.getGuid(),
+                path: context._dateBarPath[0],
+                callback: function(list_event) {
+                    list_event.forEach(function(obj_event) {
+                        // Get event type
+                        context._path(context.event_type, obj_event, function(str_event_type) {
+                            // Get event colour
+                            context._path(context.event_colour, obj_event, function(str_event_colour) {
+                                // Render datebar
+                                context._renderDateBars(obj_event, personNodes, str_event_type, str_event_colour)
+                            });
+                        });
+                    });
                 }
-
-                // Save object context
-                var objContext = context._domNodes[_value];
-
-                // HTML Variables
-                var personHTML = _person.get(context.fullname) ? "<div>" + _person.get(context.fullname) + "</div>" : "<div>N/A</div>";
-                var descriptionHTML = context.description ? (_person.get(context.description) ? "<div>" + _person.get(context.description) + "</div>" : "") : "";
-
-                // Render people
-                var personNodes = {
-                    left: dojo.create("div", {
-                        class: "rp-row rp-group-left",
-                        innerHTML: personHTML +  descriptionHTML
-                    }, objContext.list.list),
-                    right: dojo.create("div", {class: "rp-row rp-group-right"}, objContext.list.list)
-                };
-                personNodes.scroller = dojo.create("div", {class: "rp-scroller", style: "width: " + context._values.scrollWidth + "%"}, personNodes.right);
-
-                // Get datebars
-                mx.data.get({
-                    guid: _person.getGuid(),
-                    path: context._dateBarPath[0],
-                    callback: function(objs) {
-                        objs.forEach(function(obj) { context._renderDateBars(obj, personNodes); });
-                    }
-                });
-
-                // Save nodes
-                objContext.list.items.push(personNodes);
             });
+
+            // Save nodes
+            objContext.list.items.push(personNodes);
         },
 
         _renderSection: function (_value) {
@@ -185,7 +201,7 @@ define([
             // Generate date labels
             function gDateLabels() {
                 var returnStr = "";
-                var loopDate = new Date(context.dateFrom);
+                var loopDate = new Date(context.obj_dateFrom);
 
                 for (var i = 0; i < context._values.daysBetween; i++) {
                     returnStr += "<span class=\"rp-label-date\" style=\"width:" + context._values.daysWidth + "%;\"><div class=\"rp-line\"></div>" + loopDate.getDate() + "</span>";
@@ -197,14 +213,14 @@ define([
             // Generate month labels
             function gMonthLabels(obj) {
                 var returnStr = "";
-                var loopDate = new Date(context.dateFrom);
+                var loopDate = new Date(context.obj_dateFrom);
                 var monthsWidth = 0;
                 loopDate.setDate(1);
 
                 for (var i = 0; i < context._values.monthsBetween; i++) {
                     var monthEnd = new Date(loopDate.getFullYear(), loopDate.getMonth() + 1, 0);
-                    if (context.dateFrom.getMonth() == loopDate.getMonth()) monthsWidth = (context.dateFrom.daysBetween(monthEnd) + 1) / context._values.daysBetween * 100;
-                    else if (context.dateTo.getMonth() == loopDate.getMonth()) monthsWidth = (loopDate.daysBetween(context.dateTo) + 1) / context._values.daysBetween * 100;
+                    if (context.obj_dateFrom.getMonth() == loopDate.getMonth()) monthsWidth = (context.obj_dateFrom.daysBetween(monthEnd) + 1) / context._values.daysBetween * 100;
+                    else if (context.obj_dateTo.getMonth() == loopDate.getMonth()) monthsWidth = (loopDate.daysBetween(context.obj_dateTo) + 1) / context._values.daysBetween * 100;
                     else monthsWidth = (loopDate.daysBetween(monthEnd) + 1) / context._values.daysBetween * 100;
                     returnStr += "<h3 class=\"rp-label-date\" style=\"width:" + monthsWidth + "%;\">" + months[loopDate.getMonth()] + "</h3>";
                     loopDate = loopDate.addMonths(1);
@@ -250,9 +266,9 @@ define([
             var context = this;
 
             // Generate all values for table
-            this._values.daysBetween =  this.dateFrom.daysBetween(this.dateTo) + 1;
+            this._values.daysBetween =  this.obj_dateFrom.daysBetween(this.obj_dateTo) + 1;
             this._values.daysWidth =  100 / this._values.daysBetween;
-            this._values.monthsBetween = this.dateFrom.monthsBetween(this.dateTo) + 1;
+            this._values.monthsBetween = this.obj_dateFrom.monthsBetween(this.obj_dateTo) + 1;
             this._values.scrollWidth = this._values.monthsBetween * 100;
 
             // Create scrollbar
@@ -266,8 +282,15 @@ define([
             // Render people
             mx.data.get({
                 xpath: context._XPath.people,
-                callback: function(objs) {
-                    objs.forEach(function(obj) { context._renderPerson(obj) })
+                callback: function(_personObjs) {
+                    _personObjs.forEach(function(_personObj) {
+                        if (context.resource_category) {
+                            _personObj.fetch(context.resource_category, function(_categoryStr) {               
+                                context._renderPerson(_personObj, _categoryStr);
+                            });
+                        }
+                        else context._renderPerson(_personObj, null);
+                    })
                 }
             });
         },
@@ -281,15 +304,15 @@ define([
             this._clear();
 
             // Instantiate dates
-            this.dateFrom = new Date(this._contextObj.get(this.searchDateFrom));
-            this.dateTo = new Date(this._contextObj.get(this.searchDateTo));
+            this.obj_dateFrom = new Date(this._contextObj.get(this.search_dateFrom));
+            this.obj_dateTo = new Date(this._contextObj.get(this.search_dateTo));
 
-            var startXpathFilter = "[" + context.startDate + " > " + this.dateFrom.valueOf() + " or " + context.endDate + " > " + this.dateFrom.valueOf() + "]";
-            var endXpathFilter = "[" + context.startDate + " < " + this.dateTo.valueOf() + " or " + context.endDate + " < " + this.dateTo.valueOf() + "]";
+            var startXpathFilter = "[" + context.event_startDate + " > " + this.obj_dateFrom.valueOf() + " or " + context.event_endDate + " > " + this.obj_dateFrom.valueOf() + "]";
+            var endXpathFilter = "[" + context.event_startDate + " < " + this.obj_dateTo.valueOf() + " or " + context.event_endDate + " < " + this.obj_dateTo.valueOf() + "]";
 
             // Instantiate variables
-            this._dateBarPath = this.person ? this.person.split("/") : null;
-            this._XPath.people = "//" + context.dateBar + startXpathFilter + endXpathFilter + "/" + context.person;
+            this._dateBarPath = this.resource ? this.resource.split("/") : null;
+            this._XPath.people = "//" + context.event + startXpathFilter + endXpathFilter + "/" + context.resource;
 
             // Render inital table
             this._renderTable();
