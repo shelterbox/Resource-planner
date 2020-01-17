@@ -1,3 +1,16 @@
-# Mendix Widget Boilerplate
+# Resource planner widget
 
-See [AppStoreWidgetBoilerplate](https://github.com/mendix/AppStoreWidgetBoilerplate/) for an example
+[Features](#features)  
+[Screenshots](#features)  
+
+## Features
+ - Create a gant chart style planner to schedule events
+ - Categorise resources under dynamic or static heading(s)
+ - Colour event bars on the timeline
+ - Add search filters to the planner
+ - Quick XPath searching
+
+## Screenshots
+
+
+*This widget was made using the [Mendix widget boilerplate](https://github.com/mendix/AppStoreWidgetBoilerplate/).*

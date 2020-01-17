@@ -12,7 +12,7 @@
             <description>Entity: The entity used to control the search filters (Needs to be in context)</description>
         </property>
         <property key="search_dateFrom" type="attribute" entityProperty="search" required="true">
-            <caption>From date</caption>
+            <caption>Search from date</caption>
             <category>Search</category>
             <description></description>
             <attributeTypes>
@@ -20,12 +20,25 @@
             </attributeTypes>
         </property>
         <property key="search_dateTo" type="attribute" entityProperty="search" required="true">
-            <caption>To date</caption>
+            <caption>Search to date</caption>
             <category>Search</category>
             <description></description>
             <attributeTypes>
                 <attributeType name="DateTime" />
             </attributeTypes>
+        </property>
+        <property key="search_dynXpath" type="attribute" isPath="optional" pathType="reference" entityProperty="event" required="false">
+            <caption>Search XPath dynamic</caption>
+            <category>Search</category>
+            <description>Attribute: XPath to control search filter (Event entity)</description>
+            <attributeTypes>
+                <attributeType name="String" />
+            </attributeTypes>
+        </property>
+        <property key="search_statXpath" type="entityConstraint" entityProperty="event" required="false">
+            <caption>Search XPath static</caption>
+            <category>Search</category>
+            <description>XPath: Constraint on the event entity</description>
         </property>
 
         <!-- Event -->
@@ -35,7 +48,7 @@
             <description>Entity: Event</description>
         </property>
         <property key="event_startDate" type="attribute" entityProperty="event" required="true">
-            <caption>Start date</caption>
+            <caption>Event start date</caption>
             <category>Event</category>
             <description>Attribute: Start of event</description>
             <attributeTypes>
@@ -43,7 +56,7 @@
             </attributeTypes>
         </property>
         <property key="event_endDate" type="attribute" entityProperty="event" required="true">
-            <caption>End date</caption>
+            <caption>Event end date</caption>
             <category>Event</category>
             <description>Attribute: End of event</description>
             <attributeTypes>
@@ -51,7 +64,7 @@
             </attributeTypes>
         </property>
         <property key="event_type" type="attribute" isPath="optional" pathType="reference" entityProperty="event" required="false">
-            <caption>Type</caption>
+            <caption>Event type</caption>
             <category>Event</category>
             <description>Attribute: Type label</description>
             <attributeTypes>
@@ -60,7 +73,7 @@
             </attributeTypes>
         </property>
         <property key="event_colour" type="attribute" isPath="optional" pathType="reference" entityProperty="event" required="false">
-            <caption>Bar colour</caption>
+            <caption>Event bar colour</caption>
             <category>Event</category>
             <description>Attribute: CSS colour (eg: '#DB3E3E', 'rgb(219, 62, 62)')</description>
             <attributeTypes>
@@ -73,10 +86,10 @@
         <property key="resource" type="entity" isPath="yes" pathType="reference" allowNonPersistableEntities="false" required="true" entityProperty="event">
             <caption>Resource entity</caption>
             <category>Resource</category>
-            <description>Entity: The entity used to retrieve the resource (linked to 'Date bar entity')</description>
+            <description>Entity: The entity used to retrieve the resource (linked to 'Event entity')</description>
         </property>
         <property key="resource_name" type="attribute" entityProperty="resource" required="true">
-            <caption>Full name</caption>
+            <caption>Resource name</caption>
             <category>Resource</category>
             <description></description>
             <attributeTypes>
@@ -84,7 +97,7 @@
             </attributeTypes>
         </property>
         <property key="resource_category" type="attribute" isPath="optional" pathType="reference" entityProperty="resource" required="false">
-            <caption>Category</caption>
+            <caption>Resource category</caption>
             <category>Resource</category>
             <description>Attribute: Seperated planner categories (Leave blank for hardcoded title)</description>
             <attributeTypes>
@@ -93,12 +106,12 @@
             </attributeTypes>
         </property>
         <property key="resource_title" type="string" required="false">
-            <caption>Title</caption>
+            <caption>Resource title</caption>
             <category>Resource</category>
             <description>String: Hardcoded planner title</description>
         </property>
         <property key="resource_description" type="attribute" entityProperty="resource" required="false">
-            <caption>Description</caption>
+            <caption>Resource description</caption>
             <category>Resource</category>
             <description></description>
             <attributeTypes>
