@@ -4,7 +4,7 @@
 [Screenshots](#features)  
 
 ## Features
- - Create a gant chart style planner to schedule events
+ - Create a gantt chart style planner to schedule events
  - Categorise resources under dynamic or static heading(s)
  - Colour event bars on the timeline
  - Add search filters to the planner
