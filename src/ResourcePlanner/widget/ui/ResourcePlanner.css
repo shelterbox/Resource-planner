@@ -19,7 +19,8 @@
   .rp-group-wrapper .rp-group-right, .rp-group-list .rp-group-right {
     width: 80%;
     overflow: hidden;
-    box-shadow: -1px 0 0 inset #D7D7D7, 1px 0 0 inset #D7D7D7; }
+    box-shadow: #D7D7D7 -1px 0px 0px inset, #D7D7D7 1px 0px 0px inset;
+    transition: 0.5s box-shadow ease; }
   .rp-group-wrapper .rp-group-list, .rp-group-list .rp-group-list {
     width: 100%; }
   .rp-group-wrapper .rp-label-date, .rp-group-list .rp-label-date {

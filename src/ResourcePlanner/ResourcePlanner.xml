@@ -27,7 +27,7 @@
                 <attributeType name="DateTime" />
             </attributeTypes>
         </property>
-        <property key="search_dynXpath" type="attribute" isPath="optional" pathType="reference" entityProperty="event" required="false">
+        <property key="search_dynXpath" type="attribute" isPath="optional" pathType="reference" entityProperty="search" required="false">
             <caption>Search XPath dynamic</caption>
             <category>Search</category>
             <description>Attribute: XPath to control search filter (Event entity)</description>

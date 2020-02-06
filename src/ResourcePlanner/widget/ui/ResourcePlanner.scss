@@ -11,7 +11,7 @@
     flex-wrap: wrap;
     overflow: hidden;
     .rp-group-left { width: 20%; background: #FFFFFF; position: relative; z-index: 1; }
-    .rp-group-right { width: 80%; overflow: hidden; box-shadow: -1px 0 0 inset #D7D7D7, 1px 0 0 inset #D7D7D7; }
+    .rp-group-right { width: 80%; overflow: hidden; box-shadow: #D7D7D7 -1px 0px 0px inset, #D7D7D7 1px 0px 0px inset; transition: 0.5s box-shadow ease; }
     .rp-group-list { width: 100%; }
     .rp-label-date { display: inline-block; overflow: hidden; }
     .rp-heading { border: 0; box-shadow: none; }
