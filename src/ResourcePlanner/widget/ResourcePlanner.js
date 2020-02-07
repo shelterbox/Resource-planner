@@ -54,14 +54,32 @@ define([
         // Person source
         resource: null,
         resource_name: null,
+        resource_description: null,
         resource_category: null,
         resource_title: null,
-        resource_description: null,
+        resource_sortBy: null,
 
         // Saved objects
         _domNodes: {},
         _values: {},
         _categories: {},
+
+        _fetch: function(mxObject, path, callback) {
+            if (path.attribute == null || path.attribute == "") callback(null);
+            else {
+                if (path.path == null || path.path == "") callback(mxObject);
+                else mxObject.fetch(path.path, result => { callback(result) });
+            }
+        },
+
+        _splitPath: function(string_path) {
+            if (string_path == "" || string_path == null) return { path: null, attribute: null };
+            var obj = new Object;
+            obj.path = string_path.split('/');
+            obj.attribute = obj.path.pop();
+            obj.path = obj.path.join('/');
+            return obj;
+        },
 
         _clear: function() {
             this._domNodes = {};
@@ -238,22 +256,28 @@ define([
             return new Promise((resolve, reject) => {
                 var event = { obj: mxObject_event };
                 try {
+                    console.log(context.event_colour, context.event_type, context.resource_category);
+                    var colourPath      = context._splitPath(context.event_colour);
+                    var typePath        = context._splitPath(context.event_type);
+                    var categoryPath    = context._splitPath(context.resource_category);
                     mxObject_event.fetch(context.resource, mxObject_resource => {
                         event.resourceObj = mxObject_resource;
-                        mxObject_event.fetch(context.event_colour, string_eventColour => {
-                            event.colourString = string_eventColour instanceof Object ? null : string_eventColour;
-                            mxObject_event.fetch(context.event_type, string_eventType => {
-                                event.typeString = string_eventType instanceof Object ? null : string_eventType;
-                                mxObject_resource.fetch(context.resource_category, function(string_category) {
-                                    if (string_category instanceof Object) event.categoryString = context.resource_title ? context.resource_title : "Planner";
-                                    else event.categoryString = string_category;
+                        context._fetch(mxObject_event, colourPath, mxObject_eventColour => {
+                            event.colourString = mxObject_eventColour instanceof Object ? mxObject_eventColour.get(colourPath.attribute) : null;
+                            context._fetch(mxObject_event, typePath, mxObject_eventType => {
+                                event.typeString = mxObject_eventType instanceof Object ? mxObject_eventType.get(typePath.attribute) : null;
+                                event.typeString = mxObject_eventType.isEnum(typePath.attribute) ? mxObject_eventType.getEnumCaption(typePath.attribute, event.typeString) : event.typeString;
+                                context._fetch(mxObject_resource, categoryPath, mxObject_category => {
+                                    if (mxObject_category instanceof Object) event.categoryString = mxObject_category.get(categoryPath.attribute);
+                                    else event.categoryString = context.resource_title ? context.resource_title : "Planner";
                                     resolve(event);
                                 });
                             });
                         });
                     });
                 }
-                catch {
+                catch(e) {
+                    console.log(e);
                     reject("Could not fetch data");
                 }
             });
@@ -261,21 +285,23 @@ define([
 
         fetchAllData: function() {
             var context = this;
-            var xpathStart = "[" + context.event_startDate + " > " + context.obj_dateFrom.valueOf() + " or " + context.event_endDate + " > " + context.obj_dateFrom.valueOf() + "]";
-            var xpathEnd = "[" + context.event_startDate + " < " + context.obj_dateTo.valueOf() + " or " + context.event_endDate + " < " + context.obj_dateTo.valueOf() + "]";
+            var xpathStart = "[" + context.event_startDate + " >= " + context.obj_dateFrom.valueOf() + " or " + context.event_endDate + " >= " + context.obj_dateFrom.valueOf() + "]";
+            var xpathEnd = "[" + context.event_startDate + " <= " + (context.obj_dateTo.valueOf() + 1000*60*60*23) + " or " + context.event_endDate + " <= " + (context.obj_dateTo.valueOf() + 1000*60*60*23) + "]";
             var xpath = "//" + context.event + xpathStart + xpathEnd + context.search_statXpath + (context.search_dynXpath ? context._contextObj.get(context.search_dynXpath) : "");
+            var sortOrder = context.resource + "/" + (context.resource_sortBy ? context.resource_sortBy : context.resource_name);
             return new Promise((resolve, reject) => {
                 try {
                     mx.data.get({
                         xpath: xpath,
+                        filter: { sort: [[sortOrder, "asc"]] },
                         callback: mxList_event => {
                             var returnList = new Array;
                             var listCount = mxList_event.length;
                             if (listCount == 0) resolve(new Array);
-                            mxList_event.forEach(function(mxObject_event) {
+                            mxList_event.forEach((mxObject_event, event_index) => {
                                 var fetchEventData = context.fetchData(mxObject_event);
-                                fetchEventData.then(function(data) {
-                                    returnList.push(data);
+                                fetchEventData.then(data => {
+                                    returnList[event_index] = data;
                                     if (--listCount <= 0) resolve(returnList);
                                 });
                             });
@@ -296,8 +322,6 @@ define([
             // Instantiate dates
             this.obj_dateFrom = new Date(this._contextObj.get(this.search_dateFrom)).flatten();
             this.obj_dateTo = new Date(this._contextObj.get(this.search_dateTo)).flatten();
-            // Instantiate variables
-            this._dateBarPath = this.resource ? this.resource.split("/") : null;
             // Render inital table
             var pid = mx.ui.showProgress();
             var data = context.fetchAllData();

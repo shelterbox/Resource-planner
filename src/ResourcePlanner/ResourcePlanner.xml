@@ -96,6 +96,14 @@
                 <attributeType name="String" />
             </attributeTypes>
         </property>
+        <property key="resource_description" type="attribute" entityProperty="resource" required="false">
+            <caption>Resource description</caption>
+            <category>Resource</category>
+            <description></description>
+            <attributeTypes>
+                <attributeType name="String" />
+            </attributeTypes>
+        </property>
         <property key="resource_category" type="attribute" isPath="optional" pathType="reference" entityProperty="resource" required="false">
             <caption>Resource category</caption>
             <category>Resource</category>
@@ -110,12 +118,15 @@
             <category>Resource</category>
             <description>String: Hardcoded planner title</description>
         </property>
-        <property key="resource_description" type="attribute" entityProperty="resource" required="false">
-            <caption>Resource description</caption>
+        <property key="resource_sortBy" type="attribute" isPath="optional" pathType="reference" entityProperty="resource" required="false">
+            <caption>Sort by</caption>
             <category>Resource</category>
             <description></description>
             <attributeTypes>
                 <attributeType name="String" />
+                <attributeType name="Enum" />
+                <attributeType name="DateTime" />
+                <attributeType name="Integer" />
             </attributeTypes>
         </property>
     </properties>

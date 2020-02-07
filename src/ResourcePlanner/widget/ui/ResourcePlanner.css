@@ -41,7 +41,7 @@
         .rp-group-wrapper .rp-label.rp-group-right .rp-scroller .rp-label-date .rp-line, .rp-group-list .rp-label.rp-group-right .rp-scroller .rp-label-date .rp-line {
           position: absolute;
           width: 1px;
-          height: calc(100% - 80px);
+          height: 100%;
           background: #D7D7D7; }
     .rp-group-wrapper .rp-label.rp-group-left > span, .rp-group-list .rp-label.rp-group-left > span {
       padding: 0 10px; }
