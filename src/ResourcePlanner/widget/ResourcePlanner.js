@@ -64,6 +64,15 @@ define([
         _values: {},
         _categories: {},
 
+        _getString: function(mxObject, attribute) {
+            var string = null;
+            if (mxObject instanceof Object) {
+                string = mxObject.get(attribute);
+                string = mxObject.isEnum(attribute) ? mxObject.getEnumCaption(attribute, string) : string;
+            }
+            return string;
+        },
+
         _fetch: function(mxObject, path, callback) {
             if (path.attribute == null || path.attribute == "") callback(null);
             else {
@@ -256,22 +265,25 @@ define([
             return new Promise((resolve, reject) => {
                 var event = { obj: mxObject_event };
                 try {
-                    console.log(context.event_colour, context.event_type, context.resource_category);
-                    var colourPath      = context._splitPath(context.event_colour);
-                    var typePath        = context._splitPath(context.event_type);
-                    var categoryPath    = context._splitPath(context.resource_category);
+                    var colourPath = context._splitPath(context.event_colour);
+                    var typePath = context._splitPath(context.event_type);
+                    var categoryPath = context._splitPath(context.resource_category);
                     mxObject_event.fetch(context.resource, mxObject_resource => {
                         event.resourceObj = mxObject_resource;
                         context._fetch(mxObject_event, colourPath, mxObject_eventColour => {
-                            event.colourString = mxObject_eventColour instanceof Object ? mxObject_eventColour.get(colourPath.attribute) : null;
+                            event.colourString = context._getString(mxObject_eventColour, colourPath.attribute);
                             context._fetch(mxObject_event, typePath, mxObject_eventType => {
-                                event.typeString = mxObject_eventType instanceof Object ? mxObject_eventType.get(typePath.attribute) : null;
-                                event.typeString = mxObject_eventType.isEnum(typePath.attribute) ? mxObject_eventType.getEnumCaption(typePath.attribute, event.typeString) : event.typeString;
-                                context._fetch(mxObject_resource, categoryPath, mxObject_category => {
-                                    if (mxObject_category instanceof Object) event.categoryString = mxObject_category.get(categoryPath.attribute);
-                                    else event.categoryString = context.resource_title ? context.resource_title : "Planner";
+                                event.typeString = context._getString(mxObject_eventType, typePath.attribute);
+                                if (categoryPath.attribute != null) {
+                                    context._fetch(mxObject_resource, categoryPath, mxObject_category => {
+                                        event.categoryString = context._getString(mxObject_category, categoryPath.attribute);
+                                        resolve(event);
+                                    });
+                                }
+                                else {
+                                    event.categoryString = context.resource_title ? context.resource_title : "Planner";
                                     resolve(event);
-                                });
+                                }
                             });
                         });
                     });
