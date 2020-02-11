@@ -335,12 +335,15 @@ define([
             this.obj_dateFrom = new Date(this._contextObj.get(this.search_dateFrom)).flatten();
             this.obj_dateTo = new Date(this._contextObj.get(this.search_dateTo)).flatten();
             // Render inital table
-            var pid = mx.ui.showProgress();
-            var data = context.fetchAllData();
-            data.then(function(list_data) {
-                context._renderTable(list_data);
-                mx.ui.hideProgress(pid);
-            });
+            if (this.obj_dateFrom.monthsBetween(this.obj_dateTo) < 11) {
+                var pid = mx.ui.showProgress();
+                var data = context.fetchAllData();
+                data.then(function(list_data) {
+                    context._renderTable(list_data);
+                    mx.ui.hideProgress(pid);
+                });
+            }
+            else mx.ui.error("Date range > 10 months");
         },
 
         constructor: function () {

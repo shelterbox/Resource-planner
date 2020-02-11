@@ -1,17 +1,12 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<widget id="ResourcePlanner.widget.ResourcePlanner" needsEntityContext="false" xmlns="http://www.mendix.com/widget/1.0/">
+<widget id="ResourcePlanner.widget.ResourcePlanner" needsEntityContext="true" xmlns="http://www.mendix.com/widget/1.0/">
     <name>ResourcePlanner</name>
     <description>Render an agenda style calendar widget</description>
 
     <icon />
     <properties>
         <!-- Search -->
-        <property key="search" type="entity" isPath="no" allowNonPersistableEntities="true" required="false">
-            <caption>Search entity</caption>
-            <category>Search</category>
-            <description>Entity: The entity used to control the search filters (Needs to be in context)</description>
-        </property>
-        <property key="search_dateFrom" type="attribute" entityProperty="search" required="true">
+        <property key="search_dateFrom" type="attribute" required="true">
             <caption>Search from date</caption>
             <category>Search</category>
             <description></description>
@@ -19,7 +14,7 @@
                 <attributeType name="DateTime" />
             </attributeTypes>
         </property>
-        <property key="search_dateTo" type="attribute" entityProperty="search" required="true">
+        <property key="search_dateTo" type="attribute" required="true">
             <caption>Search to date</caption>
             <category>Search</category>
             <description></description>
@@ -27,7 +22,7 @@
                 <attributeType name="DateTime" />
             </attributeTypes>
         </property>
-        <property key="search_dynXpath" type="attribute" isPath="optional" pathType="reference" entityProperty="search" required="false">
+        <property key="search_dynXpath" type="attribute" isPath="optional" pathType="reference" required="false">
             <caption>Search XPath dynamic</caption>
             <category>Search</category>
             <description>Attribute: XPath to control search filter (Event entity)</description>
