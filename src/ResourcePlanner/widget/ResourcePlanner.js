@@ -38,7 +38,6 @@ define([
         obj_dateTo: null, 
 
         // Search source
-        search: null,
         search_dateFrom: null,
         search_dateTo: null,
         search_dynXpath: null,
@@ -52,7 +51,6 @@ define([
         event_colour: null,
 
         // Person source
-        resource: null,
         resource_name: null,
         resource_description: null,
         resource_category: null,
@@ -73,12 +71,21 @@ define([
             return string;
         },
 
-        _fetch: function(mxObject, path, callback) {
-            if (path.attribute == null || path.attribute == "") callback(null);
-            else {
-                if (path.path == null || path.path == "") callback(mxObject);
-                else mxObject.fetch(path.path, result => { callback(result) });
-            }
+        _fetchString: function(mxObject, path) {
+            var context = this;
+            return new Promise((resolve, reject) => {
+                context._fetch(mxObject, path).then(returnObj => { resolve(context._getString(returnObj, path.attribute)) });
+            });
+        },
+
+        _fetch: function(mxObject, path) {
+            return new Promise((resolve, reject) => {
+                if (path.attribute == null || path.attribute == "") resolve(null);
+                else {
+                    if (path.path == null || path.path == "") resolve(mxObject);
+                    else mxObject.fetch(path.path, result => { resolve(result) });
+                }
+            });
         },
 
         _splitPath: function(string_path) {
@@ -121,6 +128,22 @@ define([
             // } 
         },
 
+        _alignEvents: function(list_data) {
+            var previousData = null;
+            for (var index = 0; index < list_data.length; index++) {
+                var data = list_data[index];
+                if (previousData != null && previousData.nameString == data.nameString) {
+                    var previousEnd = new Date(previousData.get(context.event_endDate)).flatten();
+                    var currentStart = new Date(data.get(context.event_startDate)).flatten();
+                    if (previousEnd < currentStart) data.level = 1;
+                    else data.level = 2;
+                }
+                else data.level = 1;
+            }
+            console.log(list_data);
+            return list_data;
+        },
+
         renderEvent: function (mxObject_event, string_eventColour, string_eventType, object_nodes) {
             var context = this;
             function calcWidth() {
@@ -149,11 +172,11 @@ define([
             dojoStyle.set(event.node, options);
         },
 
-        renderResource: function (mxObject_person, object_nodes) {
+        renderResource: function (string_name, string_description, object_nodes) {
             var context = this;
             // HTML Variables
-            var personHTML = `<div>${mxObject_person.get(context.resource_name)}</div>`;
-            var descriptionHTML = context.resource_description ? `<div>${mxObject_person.get(context.resource_description)}</div>` : "";
+            var personHTML = `<div>${string_name}</div>`;
+            var descriptionHTML = context.resource_description ? `<div>${string_description}</div>` : "";
             // Render people
             var personNodes             = new Object;
             personNodes.left            = dojo.create("div", {class: "rp-row rp-group-left", innerHTML: personHTML +  descriptionHTML}, object_nodes.list.scroller);
@@ -229,10 +252,10 @@ define([
                 section.node        = section.node ? section.node : context.renderSection(data.categoryString);
                 section.resources   = section.resources ? section.resources : new Object;
                 // Process resource
-                var resource        = section.resources[data.resourceObj.getGuid()] ? section.resources[data.resourceObj.getGuid()] : new Object;
-                resource.node       = resource.node ? resource.node : context.renderResource(data.resourceObj, section.node);
+                var resource        = section.resources[data.nameString] ? section.resources[data.nameString] : new Object;
+                resource.node       = resource.node ? resource.node : context.renderResource(data.nameString, data.descriptionString, section.node);
                 resource.events     = resource.events ? resource.events : new Object;
-                section.resources[data.resourceObj.getGuid()] = resource;
+                section.resources[data.nameString] = resource;
                 // Process event
                 var event           = resource.events[data.obj.getGuid()] ? resource.events[data.obj.getGuid()] : new Object;
                 event.node          = event.node ? event.node : context.renderEvent(data.obj, data.colourString, data.typeString, resource.node);
@@ -265,28 +288,33 @@ define([
             return new Promise((resolve, reject) => {
                 var event = { obj: mxObject_event };
                 try {
-                    var colourPath = context._splitPath(context.event_colour);
-                    var typePath = context._splitPath(context.event_type);
+                    // Name
+                    var namePath = context._splitPath(context.resource_name);
+                    var namePromise = context._fetchString(mxObject_event, namePath);
+                    // Description
+                    var descriptionPath = context._splitPath(context.resource_description);
+                    var descriptionPromise = context._fetchString(mxObject_event, descriptionPath);
+                    // Category
                     var categoryPath = context._splitPath(context.resource_category);
-                    mxObject_event.fetch(context.resource, mxObject_resource => {
-                        event.resourceObj = mxObject_resource;
-                        context._fetch(mxObject_event, colourPath, mxObject_eventColour => {
-                            event.colourString = context._getString(mxObject_eventColour, colourPath.attribute);
-                            context._fetch(mxObject_event, typePath, mxObject_eventType => {
-                                event.typeString = context._getString(mxObject_eventType, typePath.attribute);
-                                if (categoryPath.attribute != null) {
-                                    context._fetch(mxObject_resource, categoryPath, mxObject_category => {
-                                        event.categoryString = context._getString(mxObject_category, categoryPath.attribute);
+                    var categoryPromise = context._fetchString(mxObject_event, categoryPath);
+                    // Colour
+                    var colourPath = context._splitPath(context.event_colour);
+                    var colourPromise = context._fetchString(mxObject_event, colourPath);
+                    // Type
+                    var typePath = context._splitPath(context.event_type);
+                    var typePromise = context._fetchString(mxObject_event, typePath);
+                    // Retreived data
+                    namePromise.then(nameString =>                      { event.nameString = nameString;
+                        descriptionPromise.then(descriptionString =>    { event.descriptionString = descriptionString;
+                            categoryPromise.then(categoryString =>      { event.categoryString = categoryString;
+                                colourPromise.then(colourString =>      { event.colourString = colourString;
+                                    typePromise.then(typeString =>      { event.typeString = typeString;
                                         resolve(event);
-                                    });
-                                }
-                                else {
-                                    event.categoryString = context.resource_title ? context.resource_title : "Planner";
-                                    resolve(event);
-                                }
-                            });
-                        });
-                    });
+                                    })
+                                })
+                            })
+                        })
+                    })
                 }
                 catch(e) {
                     console.log(e);
@@ -300,12 +328,12 @@ define([
             var xpathStart = "[" + context.event_startDate + " >= " + context.obj_dateFrom.valueOf() + " or " + context.event_endDate + " >= " + context.obj_dateFrom.valueOf() + "]";
             var xpathEnd = "[" + context.event_startDate + " <= " + (context.obj_dateTo.valueOf() + 1000*60*60*23) + " or " + context.event_endDate + " <= " + (context.obj_dateTo.valueOf() + 1000*60*60*23) + "]";
             var xpath = "//" + context.event + xpathStart + xpathEnd + context.search_statXpath + (context.search_dynXpath ? context._contextObj.get(context.search_dynXpath) : "");
-            var sortOrder = context.resource + "/" + (context.resource_sortBy ? context.resource_sortBy : context.resource_name);
+            var sortOrder = context.resource_sortBy ? context.resource_sortBy : context.resource_name;
             return new Promise((resolve, reject) => {
                 try {
                     mx.data.get({
                         xpath: xpath,
-                        filter: { sort: [[sortOrder, "asc"]] },
+                        filter: { sort: [[sortOrder, "asc"], [context.event_startDate, "asc"]] },
                         callback: mxList_event => {
                             var returnList = new Array;
                             var listCount = mxList_event.length;
@@ -339,6 +367,7 @@ define([
                 var pid = mx.ui.showProgress();
                 var data = context.fetchAllData();
                 data.then(function(list_data) {
+                    list_data = context._alignEvents(list_data);
                     context._renderTable(list_data);
                     mx.ui.hideProgress(pid);
                 });

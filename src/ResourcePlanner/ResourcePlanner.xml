@@ -78,12 +78,7 @@
         </property>
 
         <!-- Resource -->
-        <property key="resource" type="entity" isPath="yes" pathType="reference" allowNonPersistableEntities="false" required="true" entityProperty="event">
-            <caption>Resource entity</caption>
-            <category>Resource</category>
-            <description>Entity: The entity used to retrieve the resource (linked to 'Event entity')</description>
-        </property>
-        <property key="resource_name" type="attribute" entityProperty="resource" required="true">
+        <property key="resource_name" type="attribute" isPath="optional" pathType="reference" entityProperty="event" required="true">
             <caption>Resource name</caption>
             <category>Resource</category>
             <description></description>
@@ -91,7 +86,7 @@
                 <attributeType name="String" />
             </attributeTypes>
         </property>
-        <property key="resource_description" type="attribute" entityProperty="resource" required="false">
+        <property key="resource_description" type="attribute" isPath="optional" pathType="reference" entityProperty="event" required="false">
             <caption>Resource description</caption>
             <category>Resource</category>
             <description></description>
@@ -99,7 +94,7 @@
                 <attributeType name="String" />
             </attributeTypes>
         </property>
-        <property key="resource_category" type="attribute" isPath="optional" pathType="reference" entityProperty="resource" required="false">
+        <property key="resource_category" type="attribute" isPath="optional" pathType="reference" entityProperty="event" required="false">
             <caption>Resource category</caption>
             <category>Resource</category>
             <description>Attribute: Seperated planner categories (Leave blank for hardcoded title)</description>
@@ -113,7 +108,7 @@
             <category>Resource</category>
             <description>String: Hardcoded planner title</description>
         </property>
-        <property key="resource_sortBy" type="attribute" isPath="optional" pathType="reference" entityProperty="resource" required="false">
+        <property key="resource_sortBy" type="attribute" isPath="optional" pathType="reference" entityProperty="event" required="false">
             <caption>Sort by</caption>
             <category>Resource</category>
             <description></description>
