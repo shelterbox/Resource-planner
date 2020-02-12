@@ -39,9 +39,10 @@
     .rp-group-list .rp-row {
         border-bottom: 1px solid #D7D7D7;
         &.rp-group-right .rp-scroller {
-            padding: 5px 0 10px 0;
-            min-height: 52px;
+            padding: 10px 0;
+            min-height: 32px;
             position: relative;
+            box-sizing: content-box;
             .rp-datebar {
                 margin-top: 5px;
                 height: 32px;

@@ -97,11 +97,12 @@ define([
             return obj;
         },
 
-        _clear: function() {
+        _clear: function(callback) {
             this._domNodes = {};
             this._categories = {};
             this._values = {};
             if (this.domNode) this.domNode.innerHTML = "";
+            callback();
         },
 
         _scroll: function (int_amount) {
@@ -129,22 +130,28 @@ define([
         },
 
         _alignEvents: function(list_data) {
+            var context = this;
+            var list_previousData = new Array;
             var previousData = null;
-            for (var index = 0; index < list_data.length; index++) {
-                var data = list_data[index];
-                if (previousData != null && previousData.nameString == data.nameString) {
-                    var previousEnd = new Date(previousData.get(context.event_endDate)).flatten();
-                    var currentStart = new Date(data.get(context.event_startDate)).flatten();
-                    if (previousEnd < currentStart) data.level = 1;
-                    else data.level = 2;
+            for (var dataIndex = 0; dataIndex < list_data.length; dataIndex++) {
+                var data = list_data[dataIndex];
+                var acceptableLevel = 0;
+                if (previousData != null && previousData.nameString === data.nameString && previousData.categoryString === data.categoryString) list_previousData.push(previousData);
+                else list_previousData = [];
+                for (var prevIndex = list_previousData.length - 1; prevIndex >= 0; prevIndex--) {
+                    var prevData = list_previousData[prevIndex];
+                    var previousEnd = new Date(prevData.obj.get(context.event_endDate)).flatten();
+                    var currentStart = new Date(data.obj.get(context.event_startDate)).flatten();
+                    if (previousEnd < currentStart) acceptableLevel = prevData.level;
+                    else acceptableLevel = acceptableLevel <= prevData.level ? prevData.level + 1 : acceptableLevel;
                 }
-                else data.level = 1;
+                data.level = acceptableLevel;
+                previousData = data;
             }
-            console.log(list_data);
             return list_data;
         },
 
-        renderEvent: function (mxObject_event, string_eventColour, string_eventType, object_nodes) {
+        renderEvent: function (mxObject_event, string_eventColour, string_eventType, int_level, object_nodes) {
             var context = this;
             function calcWidth() {
                 // If event sits between 'From' query
@@ -166,6 +173,7 @@ define([
             options["margin-left"]      = event.startDate > context.obj_dateFrom ? (context.obj_dateFrom.daysBetween(event.startDate) / context._values.daysBetween * 100) + "%" : "0%";
             options["width"]            = calcWidth();
             options["background-color"] = string_eventColour ? string_eventColour : "#0595DB";
+            options["margin-top"]       = int_level != 0 ? `${int_level * 32}px` : '0px';
 
             var html = `<div class="rp-datebar-label">${(event.type ? event.type + ":" : "")} ${event.startDate.toLocaleDateString()} - ${event.endDate.toLocaleDateString()}</div>`;
             event.node = dojo.create("div", {class: "rp-datebar", innerHTML: html}, object_nodes.list.scroller);
@@ -245,42 +253,52 @@ define([
         renderEvents: function(list_data) {
             var context = this;
             this._domNodes.sections = new Object;
-            list_data.forEach(data => {
-                context._domNodes.sections[data.categoryString] = context._domNodes.sections[data.categoryString] ? context._domNodes.sections[data.categoryString] : new Object;
-                // Process section
-                var section         = context._domNodes.sections[data.categoryString];
-                section.node        = section.node ? section.node : context.renderSection(data.categoryString);
-                section.resources   = section.resources ? section.resources : new Object;
-                // Process resource
-                var resource        = section.resources[data.nameString] ? section.resources[data.nameString] : new Object;
-                resource.node       = resource.node ? resource.node : context.renderResource(data.nameString, data.descriptionString, section.node);
-                resource.events     = resource.events ? resource.events : new Object;
-                section.resources[data.nameString] = resource;
-                // Process event
-                var event           = resource.events[data.obj.getGuid()] ? resource.events[data.obj.getGuid()] : new Object;
-                event.node          = event.node ? event.node : context.renderEvent(data.obj, data.colourString, data.typeString, resource.node);
-                resource.events[data.obj.getGuid()] = event;
-                context._domNodes.sections[data.categoryString] = section;
-            });
+            return new Promise((resolve, reject) => {
+                for (var index = 0; index < list_data.length; index++) {
+                    var data = list_data[index];
+                    context._domNodes.sections[data.categoryString] = context._domNodes.sections[data.categoryString] ? context._domNodes.sections[data.categoryString] : new Object;
+                    // Process section
+                    var section         = context._domNodes.sections[data.categoryString];
+                    section.node        = section.node ? section.node : context.renderSection(data.categoryString);
+                    section.resources   = section.resources ? section.resources : new Object;
+                    // Process resource
+                    var resource        = section.resources[data.nameString] ? section.resources[data.nameString] : new Object;
+                    resource.node       = resource.node ? resource.node : context.renderResource(data.nameString, data.descriptionString, section.node);
+                    resource.events     = resource.events ? resource.events : new Object;
+                    resource.size       = resource.size ? resource.size : 1;
+                    resource.size       = data.level + 1 > resource.size ? data.level + 1 : resource.size;
+                    resource.node.list.scroller.style.height = `${resource.size * 32}px`;
+                    section.resources[data.nameString] = resource;
+                    // Process event
+                    var event           = resource.events[data.obj.getGuid()] ? resource.events[data.obj.getGuid()] : new Object;
+                    event.node          = event.node ? event.node : context.renderEvent(data.obj, data.colourString, data.typeString, data.level, resource.node);
+                    resource.events[data.obj.getGuid()] = event;
+                    context._domNodes.sections[data.categoryString] = section;
+                }
+                resolve();
+            })
         },
 
         _renderTable: function (list_data) {
             var context = this;
-            if (list_data.length != 0) {
-                // Generate all values for table
-                this._values.daysBetween =  this.obj_dateFrom.daysBetween(this.obj_dateTo) + 1;
-                this._values.daysWidth =  100 / this._values.daysBetween;
-                this._values.monthsBetween = this.obj_dateFrom.monthsBetween(this.obj_dateTo) + 1;
-                this._values.scrollWidth = this._values.monthsBetween * 100;
-                // Create scrollbar
-                this._domNodes.scroller = dojo.create("div", {class: "rp-scroll-wrapper"}, context.domNode);
-                dojo.create("div", {class: "rp-scroll", style: "width: " + context._values.scrollWidth + "%"}, this._domNodes.scroller);
-                this._domNodes.scroller.addEventListener("scroll", scrollEvent);
-                // Scrollbar events
-                function scrollEvent(e) { context._scroll(context._domNodes.scroller.scrollLeft); }
-                // Loop through the events and render them
-                this.renderEvents(list_data);
-            }
+            return new Promise((resolve, reject) => {
+                if (list_data.length != 0) {
+                    // Generate all values for table
+                    this._values.daysBetween =  this.obj_dateFrom.daysBetween(this.obj_dateTo) + 1;
+                    this._values.daysWidth =  100 / this._values.daysBetween;
+                    this._values.monthsBetween = this.obj_dateFrom.monthsBetween(this.obj_dateTo) + 1;
+                    this._values.scrollWidth = this._values.monthsBetween * 100;
+                    // Create scrollbar
+                    this._domNodes.scroller = dojo.create("div", {class: "rp-scroll-wrapper"}, context.domNode);
+                    dojo.create("div", {class: "rp-scroll", style: "width: " + context._values.scrollWidth + "%"}, this._domNodes.scroller);
+                    this._domNodes.scroller.addEventListener("scroll", scrollEvent);
+                    // Scrollbar events
+                    function scrollEvent(e) { context._scroll(context._domNodes.scroller.scrollLeft); }
+                    // Loop through the events and render them
+                    this.renderEvents(list_data).then(() => { resolve(); });
+                }
+                reject("No data found");
+            })
         },
 
         fetchData: function (mxObject_event) {
@@ -358,21 +376,26 @@ define([
         render: function () {
             var context = this;
             // Clear table
-            this._clear();
-            // Instantiate dates
-            this.obj_dateFrom = new Date(this._contextObj.get(this.search_dateFrom)).flatten();
-            this.obj_dateTo = new Date(this._contextObj.get(this.search_dateTo)).flatten();
-            // Render inital table
-            if (this.obj_dateFrom.monthsBetween(this.obj_dateTo) < 11) {
-                var pid = mx.ui.showProgress();
-                var data = context.fetchAllData();
-                data.then(function(list_data) {
-                    list_data = context._alignEvents(list_data);
-                    context._renderTable(list_data);
-                    mx.ui.hideProgress(pid);
-                });
-            }
-            else mx.ui.error("Date range > 10 months");
+            this._clear(() => {
+                // Instantiate dates
+                this.obj_dateFrom = new Date(this._contextObj.get(this.search_dateFrom)).flatten();
+                this.obj_dateTo = new Date(this._contextObj.get(this.search_dateTo)).flatten();
+                // Render inital table
+                if (this.obj_dateFrom.monthsBetween(this.obj_dateTo) < 11) {
+                    var pid = mx.ui.showProgress();
+                    var data = context.fetchAllData();
+                    data.then(function(list_data) {
+                        list_data = context._alignEvents(list_data);
+                        context._renderTable(list_data).then(() => {
+                            mx.ui.hideProgress(pid);
+                        }, message => {
+                            mx.ui.hideProgress(pid);
+                            // Show message
+                        });
+                    });
+                }
+                else mx.ui.error("Date range > 10 months");
+            });
         },
 
         constructor: function () {
