@@ -131,21 +131,24 @@ define([
 
         _alignEvents: function(list_data) {
             var context = this;
-            var list_previousData = new Array;
+            var endDates = new Array;
             var previousData = null;
             for (var dataIndex = 0; dataIndex < list_data.length; dataIndex++) {
                 var data = list_data[dataIndex];
-                var acceptableLevel = 0;
-                if (previousData != null && previousData.nameString === data.nameString && previousData.categoryString === data.categoryString) list_previousData.push(previousData);
-                else list_previousData = [];
-                for (var prevIndex = list_previousData.length - 1; prevIndex >= 0; prevIndex--) {
-                    var prevData = list_previousData[prevIndex];
-                    var previousEnd = new Date(prevData.obj.get(context.event_endDate)).flatten();
-                    var currentStart = new Date(data.obj.get(context.event_startDate)).flatten();
-                    if (previousEnd < currentStart) acceptableLevel = prevData.level;
-                    else acceptableLevel = acceptableLevel <= prevData.level ? prevData.level + 1 : acceptableLevel;
+                data.level = 0
+                if (previousData != null && previousData.nameString === data.nameString && previousData.categoryString === data.categoryString) {
+                    endDates[previousData.level] = new Date(previousData.obj.get(context.event_endDate)).flatten();
                 }
-                data.level = acceptableLevel;
+                else endDates = [];
+                for (var level = 0; level < endDates.length; level++) {
+                    var endDate = endDates[level];
+                    var startDate = new Date(data.obj.get(context.event_startDate)).flatten();
+                    if (endDate < startDate) {
+                        data.level = level;
+                        break;
+                    }
+                    else data.level++
+                }
                 previousData = data;
             }
             return list_data;
@@ -297,7 +300,7 @@ define([
                     // Loop through the events and render them
                     this.renderEvents(list_data).then(() => { resolve(); });
                 }
-                reject("No data found");
+                else reject("No data found");
             })
         },
 
@@ -381,7 +384,7 @@ define([
                 this.obj_dateFrom = new Date(this._contextObj.get(this.search_dateFrom)).flatten();
                 this.obj_dateTo = new Date(this._contextObj.get(this.search_dateTo)).flatten();
                 // Render inital table
-                if (this.obj_dateFrom.monthsBetween(this.obj_dateTo) < 11) {
+                if (this.obj_dateFrom.monthsBetween(this.obj_dateTo) < 9) {
                     var pid = mx.ui.showProgress();
                     var data = context.fetchAllData();
                     data.then(function(list_data) {
@@ -390,11 +393,11 @@ define([
                             mx.ui.hideProgress(pid);
                         }, message => {
                             mx.ui.hideProgress(pid);
-                            // Show message
+                            context._domMessage(message);
                         });
                     });
                 }
-                else mx.ui.error("Date range > 10 months");
+                else context._domMessage("Date range > 8 months");
             });
         },
 
@@ -428,6 +431,15 @@ define([
 
         uninitialize: function () {
             logger.debug(this.id + ".uninitialize");
+        },
+
+        _domMessage: function(message) {
+            this.domNode.innerHTML = "";
+            var element = document.createElement("p");
+            var text = document.createTextNode(message);
+            element.appendChild(text);
+            this.domNode.appendChild(element);
+            element.setAttribute("class", "text-center");
         },
 
         _updateRendering: function (callback) {
