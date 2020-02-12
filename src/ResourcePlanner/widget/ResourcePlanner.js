@@ -178,7 +178,7 @@ define([
             options["background-color"] = string_eventColour ? string_eventColour : "#0595DB";
             options["margin-top"]       = int_level != 0 ? `${int_level * 32}px` : '0px';
 
-            var html = `<div class="rp-datebar-label">${(event.type ? event.type + ":" : "")} ${event.startDate.toLocaleDateString()} - ${event.endDate.toLocaleDateString()}</div>`;
+            var html = `<div class="rp-datebar-label">${event.type}</div>`; // ${(event.type ? event.type + ":" : "")} ${event.startDate.toLocaleDateString()} - ${event.endDate.toLocaleDateString()}
             event.node = dojo.create("div", {class: "rp-datebar", innerHTML: html}, object_nodes.list.scroller);
             dojoStyle.set(event.node, options);
         },
@@ -186,11 +186,12 @@ define([
         renderResource: function (string_name, string_description, object_nodes) {
             var context = this;
             // HTML Variables
-            var personHTML = `<div>${string_name}</div>`;
-            var descriptionHTML = context.resource_description ? `<div>${string_description}</div>` : "";
+            var personHTML = `<a class="rp-resource-name"><span class="glyphicon glyphicon-user spacing-outer-right"></span>${string_name}</a>`;
+            var descriptionHTML = context.resource_description ? `<div class="rp-resource-description">${string_description}</div>` : "";
+            var HTML = `<div class="rp-resource">${personHTML}${descriptionHTML}</div>`;
             // Render people
             var personNodes             = new Object;
-            personNodes.left            = dojo.create("div", {class: "rp-row rp-group-left", innerHTML: personHTML +  descriptionHTML}, object_nodes.list.scroller);
+            personNodes.left            = dojo.create("div", {class: "rp-row rp-group-left", innerHTML: HTML}, object_nodes.list.scroller);
             personNodes.right           = dojo.create("div", {class: "rp-row rp-group-right"}, object_nodes.list.scroller);
             // Render scroller list
             personNodes.list            = new Object;
@@ -224,9 +225,9 @@ define([
                     if (context.obj_dateFrom.getMonth() == loopDate.getMonth()) monthsWidth = (context.obj_dateFrom.daysBetween(monthEnd) + 1) / context._values.daysBetween * 100;
                     else if (context.obj_dateTo.getMonth() == loopDate.getMonth()) monthsWidth = (loopDate.daysBetween(context.obj_dateTo) + 1) / context._values.daysBetween * 100;
                     else monthsWidth = (loopDate.daysBetween(monthEnd) + 1) / context._values.daysBetween * 100;
-                    returnStr += `<h3 class="rp-label-date" style="width: ${monthsWidth}%;">${months[loopDate.getMonth()]}</h3>`;
+                    returnStr += `<div class="rp-label-date" style="width: ${monthsWidth}%;"><h3>${months[loopDate.getMonth()]}</h3><span class="rp-label-year">${loopDate.getFullYear()}</span></div>`;
                     loopDate = loopDate.addMonths(1);
-                }
+                }               
                 return returnStr;
             }
             string_title = string_title ? string_title : context.resource_title ? context.resource_title : "Planner";

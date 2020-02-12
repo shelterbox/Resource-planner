@@ -10,7 +10,15 @@
   position: relative;
   flex-direction: row;
   flex-wrap: wrap;
-  overflow: hidden; }
+  overflow: hidden;
+  user-select: none;
+  cursor: default; }
+  .rp-group-wrapper a, .rp-group-list a {
+    cursor: pointer; }
+  .rp-group-wrapper h3, .rp-group-list h3 {
+    margin: 15px 0 0 0;
+    font-weight: bold;
+    color: #555555; }
   .rp-group-wrapper .rp-group-left, .rp-group-list .rp-group-left {
     width: 20%;
     background: #FFFFFF;
@@ -21,14 +29,21 @@
     overflow: hidden;
     box-shadow: #D7D7D7 -1px 0px 0px inset, #D7D7D7 1px 0px 0px inset;
     transition: 0.5s box-shadow ease; }
+  .rp-group-wrapper .rp-group-title, .rp-group-list .rp-group-title {
+    margin-left: 10px; }
   .rp-group-wrapper .rp-group-list, .rp-group-list .rp-group-list {
     width: 100%; }
   .rp-group-wrapper .rp-label-date, .rp-group-list .rp-label-date {
-    display: inline-block;
     overflow: hidden; }
   .rp-group-wrapper .rp-heading, .rp-group-list .rp-heading {
     border: 0;
     box-shadow: none; }
+    .rp-group-wrapper .rp-heading.rp-group-right .rp-scroller, .rp-group-list .rp-heading.rp-group-right .rp-scroller {
+      display: flex; }
+      .rp-group-wrapper .rp-heading.rp-group-right .rp-scroller .rp-label-date, .rp-group-list .rp-heading.rp-group-right .rp-scroller .rp-label-date {
+        padding-left: 10px;
+        padding-bottom: 15px;
+        box-sizing: border-box; }
   .rp-group-wrapper .rp-label, .rp-group-list .rp-label {
     font-weight: bold;
     line-height: 28px;
@@ -57,7 +72,8 @@
         height: 32px;
         padding: 5px;
         border-radius: 4px;
-        position: absolute; }
+        position: absolute;
+        box-shadow: 0px -1px 0 0px inset rgba(55, 55, 55, 0.1); }
         .rp-group-wrapper .rp-group-list .rp-row.rp-group-right .rp-scroller .rp-datebar .rp-datebar-label, .rp-group-list .rp-group-list .rp-row.rp-group-right .rp-scroller .rp-datebar .rp-datebar-label {
           position: relative;
           display: inline-block;
@@ -68,8 +84,9 @@
           background: rgba(0, 0, 0, 0.3);
           color: #FFFFFF;
           margin-right: 8px;
-          transition: 0.2s background ease; }
-    .rp-group-wrapper .rp-group-list .rp-row.rp-group-left > div:first-child, .rp-group-list .rp-group-list .rp-row.rp-group-left > div:first-child {
-      padding: 7px 10px 0 10px; }
-      .rp-group-wrapper .rp-group-list .rp-row.rp-group-left > div:first-child + div, .rp-group-list .rp-group-list .rp-row.rp-group-left > div:first-child + div {
-        padding: 0px 10px 7px 10px; }
+          transition: 0.2s background ease;
+          max-width: 100%; }
+    .rp-group-wrapper .rp-group-list .rp-row.rp-group-left .rp-resource, .rp-group-list .rp-group-list .rp-row.rp-group-left .rp-resource {
+      padding: 7px 10px; }
+      .rp-group-wrapper .rp-group-list .rp-row.rp-group-left .rp-resource .rp-resource-name, .rp-group-list .rp-group-list .rp-row.rp-group-left .rp-resource .rp-resource-name {
+        font-weight: bold; }

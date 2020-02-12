@@ -1,3 +1,11 @@
+// Variables
+$text                   :   #555555;
+$text-light             :   #FFFFFF;
+$border                 :   #D7D7D7;
+$edge-dark              :   rgba(55,55,55,0.1);
+$background             :   #FFFFFF;
+$background-contrast    :   rgba(0, 0, 0, 0.3);
+
 .rp-scroll-wrapper {
     overflow-x: scroll;
     width: 80%;
@@ -10,15 +18,28 @@
     flex-direction: row;
     flex-wrap: wrap;
     overflow: hidden;
-    .rp-group-left { width: 20%; background: #FFFFFF; position: relative; z-index: 1; }
-    .rp-group-right { width: 80%; overflow: hidden; box-shadow: #D7D7D7 -1px 0px 0px inset, #D7D7D7 1px 0px 0px inset; transition: 0.5s box-shadow ease; }
+    user-select: none;
+    cursor: default;
+    a { cursor: pointer; }
+    h3 { margin: 15px 0 0 0; font-weight: bold; color: $text; }
+    .rp-group-left { width: 20%; background: $background; position: relative; z-index: 1; }
+    .rp-group-right { width: 80%; overflow: hidden; box-shadow: $border -1px 0px 0px inset, $border 1px 0px 0px inset; transition: 0.5s box-shadow ease; }
+    .rp-group-title { margin-left: 10px; }
     .rp-group-list { width: 100%; }
-    .rp-label-date { display: inline-block; overflow: hidden; }
-    .rp-heading { border: 0; box-shadow: none; }
+    .rp-label-date { overflow: hidden; }
+    .rp-heading {
+        border: 0; box-shadow: none;
+        &.rp-group-right {
+            .rp-scroller {
+                display: flex;
+                .rp-label-date { padding-left: 10px; padding-bottom: 15px; box-sizing: border-box; }
+            }
+        }
+    }
     .rp-label {
         font-weight: bold;
         line-height: 28px;
-        border-bottom: 1px solid #D7D7D7;
+        border-bottom: 1px solid $border;
         &.rp-group-right {
             .rp-scroller {
                 display: flex;
@@ -29,7 +50,7 @@
                         position: absolute;
                         width: 1px;
                         height: 100%;
-                        background: #D7D7D7;
+                        background: $border;
                     }
                 }
             }
@@ -37,7 +58,7 @@
         &.rp-group-left > span{ padding: 0 10px; }
     }
     .rp-group-list .rp-row {
-        border-bottom: 1px solid #D7D7D7;
+        border-bottom: 1px solid $border;
         &.rp-group-right .rp-scroller {
             padding: 10px 0;
             min-height: 32px;
@@ -49,6 +70,7 @@
                 padding: 5px;
                 border-radius: 4px;
                 position: absolute;
+                box-shadow: 0px -1px 0 0px inset $edge-dark;
                 .rp-datebar-label {
                     position: relative;
                     display: inline-block;
@@ -56,16 +78,21 @@
                     border-radius: 3px;
                     overflow: hidden;
                     height: 22px;
-                    background: rgba(0, 0, 0, 0.3);
-                    color: #FFFFFF;
+                    background: $background-contrast;
+                    color: $text-light;
                     margin-right: 8px;
                     transition: 0.2s background ease;
+                    max-width: 100%;
                 }
             }
         }
-        &.rp-group-left > div:first-child {
-            padding: 7px 10px 0 10px;
-            & + div { padding: 0px 10px 7px 10px; }
+        &.rp-group-left {
+            .rp-resource {
+                padding: 7px 10px;
+                .rp-resource-name {
+                    font-weight: bold;
+                }
+            }
         }
     }
 }
