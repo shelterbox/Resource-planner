@@ -9,7 +9,7 @@
         <property key="search_dateFrom" type="attribute" required="true">
             <caption>Search from date</caption>
             <category>Search</category>
-            <description></description>
+            <description>Attribute: Search filter from date (Entity context)</description>
             <attributeTypes>
                 <attributeType name="DateTime" />
             </attributeTypes>
@@ -17,7 +17,7 @@
         <property key="search_dateTo" type="attribute" required="true">
             <caption>Search to date</caption>
             <category>Search</category>
-            <description></description>
+            <description>Attribute: Search filter to date (Entity context)</description>
             <attributeTypes>
                 <attributeType name="DateTime" />
             </attributeTypes>
@@ -25,7 +25,7 @@
         <property key="search_dynXpath" type="attribute" isPath="optional" pathType="reference" required="false">
             <caption>Search XPath dynamic</caption>
             <category>Search</category>
-            <description>Attribute: XPath to control search filter (Event entity)</description>
+            <description>Attribute: Constraint on the 'Event' entity (Dynamic)</description>
             <attributeTypes>
                 <attributeType name="String" />
             </attributeTypes>
@@ -33,7 +33,7 @@
         <property key="search_statXpath" type="entityConstraint" entityProperty="event" required="false">
             <caption>Search XPath static</caption>
             <category>Search</category>
-            <description>XPath: Constraint on the event entity</description>
+            <description>XPath: Constraint on the 'Event' entity (Static)</description>
         </property>
 
         <!-- Event -->
@@ -81,43 +81,69 @@
         <property key="resource_name" type="attribute" isPath="optional" pathType="reference" entityProperty="event" required="true">
             <caption>Resource name</caption>
             <category>Resource</category>
-            <description></description>
+            <description>Attribute: Resource row identifier</description>
             <attributeTypes>
                 <attributeType name="String" />
             </attributeTypes>
+        </property>
+        <property key="resource_form" type="form" required="false">
+            <caption>Resource page</caption>
+            <category>Resource</category>
+            <description>Page: Hyperlinked page for resource name (Page context needs to match 'Resource name' attribute entity)</description>
+        </property>
+        <property key="resource_form_location" type="enumeration" defaultValue="content">
+            <caption>Resource page display type</caption>
+            <category>Resource</category>
+            <description>Enumeration: How the resource page will be displayed</description>
+            <enumerationValues>
+                <enumerationValue key="content">content</enumerationValue>
+                <enumerationValue key="popup">popup</enumerationValue>
+                <enumerationValue key="modal">modal</enumerationValue>
+            </enumerationValues>
         </property>
         <property key="resource_description" type="attribute" isPath="optional" pathType="reference" entityProperty="event" required="false">
             <caption>Resource description</caption>
             <category>Resource</category>
-            <description></description>
+            <description>Attribute: Resource row description</description>
             <attributeTypes>
                 <attributeType name="String" />
             </attributeTypes>
-        </property>
-        <property key="resource_category" type="attribute" isPath="optional" pathType="reference" entityProperty="event" required="false">
-            <caption>Resource category</caption>
-            <category>Resource</category>
-            <description>Attribute: Seperated planner categories (Leave blank for hardcoded title)</description>
-            <attributeTypes>
-                <attributeType name="String" />
-                <attributeType name="Enum" />
-            </attributeTypes>
-        </property>
-        <property key="resource_title" type="string" required="false">
-            <caption>Resource title</caption>
-            <category>Resource</category>
-            <description>String: Hardcoded planner title</description>
         </property>
         <property key="resource_sortBy" type="attribute" isPath="optional" pathType="reference" entityProperty="event" required="false">
             <caption>Sort by</caption>
             <category>Resource</category>
-            <description></description>
+            <description>Attribute: Sort resource rows by</description>
             <attributeTypes>
                 <attributeType name="String" />
                 <attributeType name="Enum" />
                 <attributeType name="DateTime" />
                 <attributeType name="Integer" />
             </attributeTypes>
+        </property>
+
+        <!-- Planner -->
+        <property key="resource_category" type="attribute" isPath="optional" pathType="reference" entityProperty="event" required="false">
+            <caption>Planner title dynamic</caption>
+            <category>Planner</category>
+            <description>Attribute: Seperate planners by title (Leave blank for 'Planner title static')</description>
+            <attributeTypes>
+                <attributeType name="String" />
+                <attributeType name="Enum" />
+            </attributeTypes>
+        </property>
+        <property key="resource_category_description" type="attribute" isPath="optional" pathType="reference" entityProperty="event" required="false">
+            <caption>Planner description</caption>
+            <category>Planner</category>
+            <description>Attribute: Sits underneath the planner title</description>
+            <attributeTypes>
+                <attributeType name="String" />
+                <attributeType name="Enum" />
+            </attributeTypes>
+        </property>
+        <property key="resource_title" type="string" required="false">
+            <caption>Planner title static</caption>
+            <category>Planner</category>
+            <description>String: Hardcoded planner title</description>
         </property>
     </properties>
 </widget>
