@@ -12,9 +12,6 @@ $background-contrast    :   rgba(0, 0, 0, 0.3);
         overflow-x: scroll;
         width: 80%;
         margin-left: auto;
-        border-left: 1px solid;
-        border-right: 1px solid;
-        border-color: $border;
         > .rp-scroll { height: 1px; }
     }
     .rp-resizer {

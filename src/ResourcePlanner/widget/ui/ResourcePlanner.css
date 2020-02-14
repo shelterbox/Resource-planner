@@ -3,10 +3,7 @@
   .rp-wrapper .rp-scroll-wrapper {
     overflow-x: scroll;
     width: 80%;
-    margin-left: auto;
-    border-left: 1px solid;
-    border-right: 1px solid;
-    border-color: #D7D7D7; }
+    margin-left: auto; }
     .rp-wrapper .rp-scroll-wrapper > .rp-scroll {
       height: 1px; }
   .rp-wrapper .rp-resizer {
