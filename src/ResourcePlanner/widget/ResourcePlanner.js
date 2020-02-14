@@ -105,13 +105,13 @@ define([
             this._categories = {};
             this._values = {};
             if (this.domNode) this.domNode.innerHTML = '';
-            callback();
+            window.requestAnimationFrame(time => { callback(); });
         },
 
         _scroll: function (int_amount) {
             var context = this;
             var options = { left: int_amount, top: 0 }
-            var shadowNodes = context.domNode.querySelectorAll('.rp-group-right:not(.rp-heading)');
+            var shadowNodes = context._domNodes.context.querySelectorAll('.rp-group-right:not(.rp-heading)');
             Object.keys(context._domNodes.sections).forEach(string_section => {
                 var section = context._domNodes.sections[string_section];
                 section.node.heading.right.scrollTo(options);
@@ -249,7 +249,7 @@ define([
             // Render section
             var section = new Object;
             // Body
-            section.wrapper             = dojo.create('div', {class: 'rp-group-wrapper'}, context.domNode);
+            section.wrapper             = dojo.create('div', {class: 'rp-group-wrapper'}, context._domNodes.context);
             section.wrapper.addEventListener('wheel', shiftScrollEvent);
             // Heading
             section.heading             = new Object;
@@ -310,12 +310,35 @@ define([
                     this._values.daysWidth =  100 / this._values.daysBetween;
                     this._values.monthsBetween = this.obj_dateFrom.monthsBetween(this.obj_dateTo) + 1;
                     this._values.scrollWidth = this._values.monthsBetween * 100;
+                    // Create wrapper
+                    this._domNodes.context = dojo.create('div', {class: 'rp-wrapper'}, context.domNode);
+                    // Create resizer
+                    this._domNodes.resizer = dojo.create('div', {class: 'rp-resizer', style: 'margin-left: 20%;'}, context._domNodes.context);
+                    this._domNodes.resizer.addEventListener('mousedown', downEvent);
                     // Create scrollbar
-                    this._domNodes.scroller = dojo.create('div', {class: 'rp-scroll-wrapper'}, context.domNode);
+                    this._domNodes.scroller = dojo.create('div', {class: 'rp-scroll-wrapper'}, context._domNodes.context);
                     dojo.create('div', {class: 'rp-scroll', style: 'width: ' + context._values.scrollWidth + '%'}, this._domNodes.scroller);
                     this._domNodes.scroller.addEventListener('scroll', scrollEvent);
-                    // Scrollbar events
+                    // Events
                     function scrollEvent(e) { context._scroll(context._domNodes.scroller.scrollLeft); }
+                    function downEvent(e) {
+                        window.addEventListener('mouseup', upEvent);
+                        window.addEventListener('mousemove', dragEvent);
+                    }
+                    function dragEvent(e) {
+                        var left = e.clientX - context._domNodes.context.getBoundingClientRect().left;
+                        var threshold = 100;
+                        if (left > threshold && left < (context._domNodes.context.offsetWidth - threshold)) {
+                            var percentageLeft = (left / context._domNodes.context.offsetWidth) * 100;
+                            var percentageRight = 100 - percentageLeft;
+                            context._domNodes.resizer.style.marginLeft = `${percentageLeft}%`;
+                            context._domNodes.scroller.style.marginLeft = `${percentageLeft}%`;
+                            context._domNodes.scroller.style.width = `${percentageRight}%`;
+                            context._domNodes.context.querySelectorAll('.rp-group-left').forEach(element => { element.style.width = `${percentageLeft}%`; });
+                            context._domNodes.context.querySelectorAll('.rp-group-right').forEach(element => { element.style.width = `${percentageRight}%`; });
+                        }
+                    }
+                    function upEvent (e) { window.removeEventListener('mousemove', dragEvent); }
                     // Loop through the events and render them
                     this.renderEvents(list_data).then(() => { resolve(); });
                 }

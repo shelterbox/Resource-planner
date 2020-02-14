@@ -6,81 +6,102 @@ $edge-dark              :   rgba(55,55,55,0.1);
 $background             :   #FFFFFF;
 $background-contrast    :   rgba(0, 0, 0, 0.3);
 
-.rp-scroll-wrapper {
-    overflow-x: scroll;
-    width: 80%;
-    margin-left: auto;
-    > .rp-scroll { height: 1px; }
-}
-.rp-group-wrapper, .rp-group-list {
+.rp-wrapper {
     position: relative;
-    overflow: hidden;
-    user-select: none;
-    cursor: default;
-    a { cursor: pointer; }
-    h3 { margin: 15px 0 0 0; font-weight: bold; color: $text; }
-    .rp-group-left { width: 20%; background: $background; position: relative; z-index: 1; }
-    .rp-group-right { width: 80%; overflow: hidden; box-shadow: $border -1px 0px 0px inset, $border 1px 0px 0px inset; transition: 0.5s box-shadow ease; }
-    .rp-row, .rp-scroller { display: flex; flex-direction: row; flex-wrap: wrap; }
-    .rp-heading .rp-group-left > *, .rp-resource, .rp-label .rp-group-left span { padding-left: 10px; }
-    .rp-heading .rp-label-date { padding-left: 10px; padding-bottom: 15px; box-sizing: border-box; overflow: hidden; }
-    .rp-label {
-        font-weight: bold;
-        line-height: 28px;
-        border-bottom: 1px solid $border;
-        .rp-label-date { text-align: center; display: block; }
-        .rp-line { position: absolute; width: 1px; height: 100%; background: $border; }
+    .rp-scroll-wrapper {
+        overflow-x: scroll;
+        width: 80%;
+        margin-left: auto;
+        border-left: 1px solid;
+        border-right: 1px solid;
+        border-color: $border;
+        > .rp-scroll { height: 1px; }
     }
-    .rp-group-list .rp-row {
-        border-bottom: 1px solid $border;
-        .rp-group-right .rp-scroller {
-            padding: 10px 0;
-            min-height: 32px;
-            position: relative;
-            box-sizing: content-box;
-            .rp-datebar {
-                display: flex;
-                margin-top: 5px;
-                height: 32px;
-                padding: 5px;
-                border-radius: 4px;
-                position: absolute;
-                box-shadow: 0px -1px 0 0px inset $edge-dark;
-                .rp-datebar-label {
-                    position: relative;
-                    padding: 1px 6px;
-                    border-radius: 3px;
-                    overflow: hidden;
-                    background: rgba(0, 0, 0, 0.3);
-                    color: #FFFFFF;
-                    max-width: 100%;
-                    white-space: nowrap;
-                    text-overflow: ellipsis;
-                    flex-shrink: 0;
-                    transition: 0.3s all ease;
-                    &.rp-date {
-                        position: absolute;
-                        flex-shrink: 1;
-                        left: 0;
-                        opacity: 0;
-                        text-overflow: clip;
+    .rp-resizer {
+        position: absolute;
+        height: 100%;
+        width: 10px;
+        margin-left: 20%;
+        left: -5px;
+        z-index: 2;
+        transition: 0.3s background ease;
+        cursor: col-resize;
+        user-select: none;
+        -webkit-user-select: none;
+        -webkit-user-drag: none;
+        &:hover { background-color: $background-contrast; }
+    }
+    .rp-group-wrapper, .rp-group-list {
+        position: relative;
+        overflow: hidden;
+        user-select: none;
+        cursor: default;
+        a { cursor: pointer; }
+        h3 { margin: 15px 0 0 0; font-weight: bold; color: $text; }
+        span, h3, .rp-resource-name, .rp-resource-description { overflow: hidden; text-overflow: ellipsis; }
+        .rp-group-left { width: 20%; background: $background; position: relative; z-index: 1; }
+        .rp-group-right { width: 80%; overflow: hidden; box-shadow: $border -1px 0px 0px inset, $border 1px 0px 0px inset; transition: 0.5s box-shadow ease; }
+        .rp-row, .rp-scroller { display: flex; flex-direction: row; flex-wrap: wrap; }
+        .rp-resource, .rp-label .rp-group-left span { padding-left: 10px; }
+        .rp-heading .rp-label-date, .rp-heading .rp-group-left { padding-left: 10px; padding-bottom: 15px; box-sizing: border-box; overflow: hidden; }
+        .rp-label {
+            font-weight: bold;
+            line-height: 28px;
+            border-bottom: 1px solid $border;
+            .rp-label-date { text-align: center; display: block; }
+            .rp-line { position: absolute; width: 1px; height: 100%; background: $border; }
+        }
+        .rp-group-list .rp-row {
+            border-bottom: 1px solid $border;
+            .rp-group-right .rp-scroller {
+                padding: 10px 0;
+                min-height: 32px;
+                position: relative;
+                box-sizing: content-box;
+                .rp-datebar {
+                    display: flex;
+                    margin-top: 5px;
+                    height: 32px;
+                    padding: 5px;
+                    border-radius: 4px;
+                    position: absolute;
+                    box-shadow: 0px -1px 0 0px inset $edge-dark;
+                    .rp-datebar-label {
+                        position: relative;
+                        padding: 1px 6px;
+                        border-radius: 3px;
+                        overflow: hidden;
+                        background: rgba(0, 0, 0, 0.3);
+                        color: #FFFFFF;
+                        max-width: 100%;
+                        white-space: nowrap;
+                        text-overflow: ellipsis;
+                        flex-shrink: 0;
+                        transition: 0.3s all ease;
+                        &.rp-date {
+                            position: absolute;
+                            flex-shrink: 1;
+                            left: 0;
+                            opacity: 0;
+                            text-overflow: clip;
+                        }
                     }
-                }
-                &:hover {
-                    .rp-datebar-label { background: rgba(0, 0, 0, 0.6); }
-                    .rp-datebar-label.rp-date {
-                        z-index: 3;
-                        backdrop-filter: blur(3px);
-                        opacity: 1;
-                        max-width: unset;
-                        margin-left: 5px;
+                    &:hover {
+                        .rp-datebar-label { background: rgba(0, 0, 0, 0.6); }
+                        .rp-datebar-label.rp-date {
+                            z-index: 3;
+                            backdrop-filter: blur(3px);
+                            opacity: 1;
+                            max-width: unset;
+                            margin-left: 5px;
+                        }
                     }
                 }
             }
-        }
-        .rp-group-left {
-            .rp-resource { padding: 7px 10px; }
-            .rp-resource-name { font-weight: bold; }
+            .rp-group-left {
+                .rp-resource { padding: 7px 10px; }
+                .rp-resource-name { font-weight: bold; }
+            }
         }
     }
 }
