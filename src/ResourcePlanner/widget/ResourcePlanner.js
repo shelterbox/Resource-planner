@@ -100,12 +100,11 @@ define([
             return obj;
         },
 
-        _clear: function(callback) {
+        _clear: function() {
             this._domNodes = {};
             this._categories = {};
             this._values = {};
             if (this.domNode) this.domNode.innerHTML = '';
-            window.requestAnimationFrame(time => { callback(); });
         },
 
         _scroll: function (int_amount) {
@@ -427,27 +426,26 @@ define([
         
         render: function () {
             var context = this;
-            // Clear table
-            this._clear(() => {
-                // Instantiate dates
-                this.obj_dateFrom = new Date(this._contextObj.get(this.search_dateFrom)).flatten();
-                this.obj_dateTo = new Date(this._contextObj.get(this.search_dateTo)).flatten();
-                // Render inital table
-                if (this.obj_dateFrom.monthsBetween(this.obj_dateTo) < 9) {
-                    var pid = mx.ui.showProgress();
-                    var data = context.fetchAllData();
-                    data.then(function(list_data) {
-                        list_data = context._alignEvents(list_data);
-                        context._renderTable(list_data).then(() => {
-                            mx.ui.hideProgress(pid);
-                        }, message => {
-                            mx.ui.hideProgress(pid);
-                            context._domMessage(message);
-                        });
+            // Instantiate dates
+            this.obj_dateFrom = new Date(this._contextObj.get(this.search_dateFrom)).flatten();
+            this.obj_dateTo = new Date(this._contextObj.get(this.search_dateTo)).flatten();
+            // Render inital table
+            if (this.obj_dateFrom.monthsBetween(this.obj_dateTo) < 9) {
+                var pid = mx.ui.showProgress();
+                var data = context.fetchAllData();
+                data.then(function(list_data) {
+                    list_data = context._alignEvents(list_data);
+                    // Clear table
+                    context._clear();
+                    context._renderTable(list_data).then(() => {
+                        mx.ui.hideProgress(pid);
+                    }, message => {
+                        mx.ui.hideProgress(pid);
+                        context._domMessage(message);
                     });
-                }
-                else context._domMessage('Date range > 8 months');
-            });
+                });
+            }
+            else context._domMessage('Date range > 8 months');
         },
 
         constructor: function () {
