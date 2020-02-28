@@ -64,7 +64,7 @@ $background-contrast    :   rgba(0, 0, 0, 0.3);
                     position: absolute;
                     box-shadow: 0px -1px 0 0px inset $edge-dark;
                     .rp-datebar-label {
-                        position: relative;
+                        position: absolute;
                         padding: 1px 6px;
                         border-radius: 3px;
                         overflow: hidden;
@@ -76,9 +76,9 @@ $background-contrast    :   rgba(0, 0, 0, 0.3);
                         flex-shrink: 0;
                         transition: 0.3s all ease;
                         &.rp-date {
-                            position: absolute;
+                            position: sticky;
                             flex-shrink: 1;
-                            left: 0;
+                            left: 5px;
                             opacity: 0;
                             text-overflow: clip;
                         }
@@ -90,7 +90,7 @@ $background-contrast    :   rgba(0, 0, 0, 0.3);
                             backdrop-filter: blur(3px);
                             opacity: 1;
                             max-width: unset;
-                            margin-left: 5px;
+                            overflow: unset;
                         }
                     }
                 }

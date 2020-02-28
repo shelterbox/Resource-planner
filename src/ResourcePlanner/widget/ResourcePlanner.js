@@ -217,7 +217,16 @@ define([
 
         renderSection: function (string_title, string_description) {
             var context = this;
-            function shiftScrollEvent(e) { if (e.shiftKey) context._domNodes.scroller.scrollLeft = e.deltaY + context._domNodes.scroller.scrollLeft; }
+            function shiftScrollEvent(e) {
+                if (e.shiftKey && e.deltaY != 0) { 
+                    e.preventDefault();
+                    context._domNodes.scroller.scrollLeft = e.deltaY + context._domNodes.scroller.scrollLeft;
+                }
+                else if (e.deltaX != 0) {
+                    e.preventDefault();
+                    context._domNodes.scroller.scrollLeft = e.deltaX + context._domNodes.scroller.scrollLeft;
+                }
+            }
             function gDateLabels() {
                 var returnStr = '';
                 var loopDate = new Date(context.obj_dateFrom);
