@@ -78,6 +78,11 @@
         </property>
 
         <!-- Resource -->
+        <property key="resource_column_title" type="string" required="false">
+            <caption>Resource column title</caption>
+            <category>Resource</category>
+            <description>String: Resource column identifier</description>
+        </property>
         <property key="resource_name" type="attribute" isPath="optional" pathType="reference" entityProperty="event" required="true">
             <caption>Resource name</caption>
             <category>Resource</category>
@@ -109,16 +114,32 @@
                 <attributeType name="String" />
             </attributeTypes>
         </property>
-        <property key="resource_sortBy" type="attribute" isPath="optional" pathType="reference" entityProperty="event" required="false">
+        <property key="resource_sortBy" type="object" isList="true" required="false">
             <caption>Sort by</caption>
             <category>Resource</category>
-            <description>Attribute: Sort resource rows by</description>
-            <attributeTypes>
-                <attributeType name="String" />
-                <attributeType name="Enum" />
-                <attributeType name="DateTime" />
-                <attributeType name="Integer" />
-            </attributeTypes>
+            <description>List: Sort resource rows by</description>
+            <properties>
+                <property key="sort" type="attribute" isPath="optional" pathType="reference" entityProperty="../event">
+                    <caption>Attribute</caption>
+                    <category>Sort</category>
+                    <description>Attribute: Sort resource rows by</description>
+                    <attributeTypes>
+                        <attributeType name="String" />
+                        <attributeType name="Enum" />
+                        <attributeType name="DateTime" />
+                        <attributeType name="Integer" />
+                    </attributeTypes>
+                </property>
+                <property key="order" type="enumeration" defaultValue="asc">
+                    <caption>Order</caption>
+                    <category>Sort</category>
+                    <description>Enum: Sort order</description>
+                    <enumerationValues>
+                        <enumerationValue key="asc">Ascending</enumerationValue>
+                        <enumerationValue key="desc">Descending</enumerationValue>
+                    </enumerationValues>
+                </property>
+            </properties>
         </property>
 
         <!-- Planner -->

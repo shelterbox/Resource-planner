@@ -51,6 +51,7 @@ define([
         event_colour: null,
 
         // Person source
+        resource_column_title: null,
         resource_name: null,
         resource_description: null,
         resource_category: null,
@@ -139,7 +140,8 @@ define([
                 var data = list_data[dataIndex];
                 data.level = 0
                 if (previousData != null && previousData.nameString === data.nameString && previousData.categoryString === data.categoryString) {
-                    endDates[previousData.level] = new Date(previousData.obj.get(context.event_endDate)).flatten();
+                    var date = previousData.obj.get(context.event_endDate) ? previousData.obj.get(context.event_endDate) : previousData.obj.get(context.event_startDate);
+                    endDates[previousData.level] = new Date(date).flatten();
                 }
                 else endDates = [];
                 for (var level = 0; level < endDates.length; level++) {
@@ -171,7 +173,7 @@ define([
             // Gather event data
             var event                   = new Object;
             event.startDate             = new Date(mxObject_event.get(context.event_startDate)).flatten();
-            event.endDate               = new Date(mxObject_event.get(context.event_endDate)).flatten();
+            event.endDate               = mxObject_event.get(context.event_endDate) != '' ? new Date(mxObject_event.get(context.event_endDate)).flatten() : event.startDate <= new Date().flatten() ? new Date().flatten() : event.startDate;
             event.type                  = string_eventType ? string_eventType : null;
             // Gather event options
             var options                 = new Object;
@@ -181,7 +183,7 @@ define([
             options['margin-top']       = int_level != 0 ? `${int_level * 32}px` : '0px';
 
             var html = event.type ? `<div class='rp-datebar-label'>${event.type}</div>` : ''; // ${(event.type ? event.type + ':' : '')}
-            html += `<div class='rp-datebar-label rp-date'>${event.startDate.toLocaleDateString()} - ${event.endDate.toLocaleDateString()}</div>`;
+            html += `<div class='rp-datebar-label rp-date'>${event.startDate.toLocaleDateString()} ${mxObject_event.get(context.event_endDate) != '' ? `- ${event.endDate.toLocaleDateString()}` : '- Unfinished'}</div>`;
             event.node = dojo.create('div', {class: 'rp-datebar', innerHTML: html}, object_nodes.list.scroller);
             dojoStyle.set(event.node, options);
         },
@@ -189,7 +191,6 @@ define([
         renderResource: function (string_name, string_description, mxObject_resource, object_nodes) {
             var context = this;
             // HTML Variables
-            console.log(context.resource_form);
             var personNode = context.resource_form ? 'a' : 'div';
             var personHTML = `<${personNode} class='rp-resource-name'><span class='glyphicon glyphicon-user spacing-outer-right'></span>${string_name}</${personNode}>`;
             var descriptionHTML = context.resource_description ? `<div class='rp-resource-description'>${string_description}</div>` : '';
@@ -204,7 +205,6 @@ define([
                 var resourceEntity = context._splitPath(context.resource_name).path.split('/').pop();
                 var resourceContext = new MxContext();
                 resourceContext.setContext(resourceEntity, mxObject_resource.getGuid());
-                console.log(resourceEntity, context);
                 resourceTitle.addEventListener('click', event => { mx.ui.openForm(context.resource_form, { location: context.resource_form_location, context: resourceContext }); });
             }
             // Render scroller list
@@ -230,9 +230,10 @@ define([
             function gDateLabels() {
                 var returnStr = '';
                 var loopDate = new Date(context.obj_dateFrom);
+                var today = new Date().flatten();
 
                 for (var i = 0; i < context._values.daysBetween; i++) {
-                    returnStr += `<span class='rp-label-date' style='width: ${context._values.daysWidth}%;'><div class='rp-line'></div>${loopDate.getDate()}</span>`;
+                    returnStr += `<span class='rp-label-date' style='width: ${context._values.daysWidth}%; ${loopDate.valueOf() == today.valueOf() ? 'background: #efefef;' : ''}'><div class='rp-line'></div>${loopDate.getDate()}</span>`;
                     loopDate = loopDate.addDays(1);
                 }
                 return returnStr;
@@ -270,7 +271,7 @@ define([
             // Label
             section.label               = new Object;
             section.label.row           = dojo.create('div', {class: 'rp-row rp-label'}, section.wrapper);
-            section.label.left          = dojo.create('div', {class: 'rp-group-left', innerHTML: '<span>Full name: </span>' }, section.label.row);
+            section.label.left          = dojo.create('div', {class: 'rp-group-left', innerHTML: `<span>${context.resource_column_title ? context.resource_column_title : 'Name'}: </span>` }, section.label.row);
             section.label.right         = dojo.create('div', {class: 'rp-group-right'}, section.label.row);
             section.label.scroller      = dojo.create('div', {class: 'rp-scroller', innerHTML: gDateLabels(), style: 'width: ' + context._values.scrollWidth + '%'}, section.label.right);
             // List
@@ -406,12 +407,17 @@ define([
             var xpathStart = '[' + context.event_startDate + ' >= ' + context.obj_dateFrom.valueOf() + ' or ' + context.event_endDate + ' >= ' + context.obj_dateFrom.valueOf() + ']';
             var xpathEnd = '[' + context.event_startDate + ' <= ' + (context.obj_dateTo.valueOf() + 1000*60*60*23) + ' or ' + context.event_endDate + ' <= ' + (context.obj_dateTo.valueOf() + 1000*60*60*23) + ']';
             var xpath = '//' + context.event + xpathStart + xpathEnd + context.search_statXpath + (context.search_dynXpath ? context._contextObj.get(context.search_dynXpath) : '');
-            var sortOrder = context.resource_sortBy ? context.resource_sortBy : context.resource_name;
+            xpath = xpath.replace(/(\'\[\%CurrentObject\%\]\')/gi, context._contextObj.getGuid());
+            var sortOrder = new Array;
+            for (var x = 0; x < context.resource_sortBy.length; x++) {
+                sortOrder.push(Object.values(context.resource_sortBy[x]));
+            }
+            sortOrder.push([context.event_startDate, 'asc']);
             return new Promise((resolve, reject) => {
                 try {
                     mx.data.get({
                         xpath: xpath,
-                        filter: { sort: [[sortOrder, 'asc'], [context.event_startDate, 'asc']] },
+                        filter: { sort: sortOrder },
                         callback: mxList_event => {
                             var returnList = new Array;
                             var listCount = mxList_event.length;
