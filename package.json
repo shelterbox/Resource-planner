@@ -1,16 +1,12 @@
 {
-  "name": "ResourcePlanner",
+  "name": "resource-planner",
   "version": "1.0.0",
   "description": "Render a agenda style calendar widget",
   "license": "Apache 2",
   "author": "Carter Moorse",
   "private": true,
   "dependencies": {
-<<<<<<< Updated upstream
-    "node-sass": "^4.13.0"
-=======
-    "bl": "^2.2.1"
->>>>>>> Stashed changes
+    "node-sass": "^4.14.1"
   },
   "devDependencies": {
     "grunt": "^1.0.1",
@@ -22,11 +18,6 @@
     "grunt-newer": "^1.2.0",
     "node-base64-image": "^0.1.2",
     "node-mendix-modeler-path": "https://github.com/JelteMX/node-mendix-modeler-path/archive/v1.0.0.tar.gz",
-<<<<<<< Updated upstream
-=======
-    "node-sass": "^4.14.1",
-    "npm-run-all": "^4.1.5",
->>>>>>> Stashed changes
     "semver": "^5.1.0",
     "shelljs": "^0.7.4",
     "xml2js": "^0.4.17"
