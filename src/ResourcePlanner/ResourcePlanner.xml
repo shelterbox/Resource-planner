@@ -1,36 +1,53 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<widget id="ResourcePlanner.widget.ResourcePlanner" needsEntityContext="false" xmlns="http://www.mendix.com/widget/1.0/">
+<widget id="ResourcePlanner.widget.ResourcePlanner" needsEntityContext="true" xmlns="http://www.mendix.com/widget/1.0/">
     <name>ResourcePlanner</name>
     <description>Render an agenda style calendar widget</description>
 
     <icon />
     <properties>
-        <!-- Search -->
-        <property key="search" type="entity" isPath="no" allowNonPersistableEntities="true" required="false">
-            <caption>Search entity</caption>
-            <category>Search</category>
-            <description>Entity: The entity used to control the search filters (Needs to be in context)</description>
+        <!-- Planner -->
+        <property key="planner_name" type="string" required="true">
+            <caption>Planner name</caption>
+            <category>Planner</category>
+            <description>String: Title for the resource planner</description>
         </property>
-        <property key="search_dateFrom" type="attribute" entityProperty="search" required="true">
+        <property key="planner_description" type="string" required="true">
+            <caption>Planner description</caption>
+            <category>Planner</category>
+            <description>String: Description for the resource planner</description>
+        </property>
+        <property key="resource_column_title" type="string" required="false">
+            <caption>Planner column title</caption>
+            <category>Planner</category>
+            <description>String: Resource column identifier</description>
+        </property>
+
+        <!-- Search -->
+        <property key="search_dateFrom" type="attribute" required="true">
             <caption>Search from date</caption>
             <category>Search</category>
-            <description></description>
+            <description>Attribute: Search filter from date (Entity context)</description>
             <attributeTypes>
                 <attributeType name="DateTime" />
             </attributeTypes>
         </property>
-        <property key="search_dateTo" type="attribute" entityProperty="search" required="true">
+        <property key="search_dateTo" type="attribute" required="true">
             <caption>Search to date</caption>
             <category>Search</category>
-            <description></description>
+            <description>Attribute: Search filter to date (Entity context)</description>
             <attributeTypes>
                 <attributeType name="DateTime" />
             </attributeTypes>
         </property>
-        <property key="search_dynXpath" type="attribute" isPath="optional" pathType="reference" entityProperty="search" required="false">
+        <property key="search_dateFilter" type="boolean" required="true" defaultValue="true">
+            <caption>Use search filter</caption>
+            <category>Search</category>
+            <description>Boolean: If yes, then only events/resources between search dates are shown. If no, then all events/resources are shown regardless of dates</description>
+        </property>
+        <property key="search_dynXpath" type="attribute" isPath="optional" pathType="reference" required="false">
             <caption>Search XPath dynamic</caption>
             <category>Search</category>
-            <description>Attribute: XPath to control search filter (Event entity)</description>
+            <description>Attribute: Constraint on the 'Event' entity (Dynamic)</description>
             <attributeTypes>
                 <attributeType name="String" />
             </attributeTypes>
@@ -38,7 +55,7 @@
         <property key="search_statXpath" type="entityConstraint" entityProperty="event" required="false">
             <caption>Search XPath static</caption>
             <category>Search</category>
-            <description>XPath: Constraint on the event entity</description>
+            <description>XPath: Constraint on the 'Event' entity (Static)</description>
         </property>
 
         <!-- Event -->
@@ -81,53 +98,206 @@
                 <attributeType name="Enum" />
             </attributeTypes>
         </property>
+        <property key="event_form" type="form" required="false">
+            <caption>Event page</caption>
+            <category>Event</category>
+            <description>Page: Hyperlink for the event bar</description>
+        </property>
+        <property key="event_form_location" type="enumeration" defaultValue="content">
+            <caption>Event page display type</caption>
+            <category>Event</category>
+            <description>Enumeration: How the event page will be displayed</description>
+            <enumerationValues>
+                <enumerationValue key="content">Content</enumerationValue>
+                <enumerationValue key="popup">Popup</enumerationValue>
+                <enumerationValue key="modal">Modal</enumerationValue>
+            </enumerationValues>
+        </property>
 
         <!-- Resource -->
-        <property key="resource" type="entity" isPath="yes" pathType="reference" allowNonPersistableEntities="false" required="true" entityProperty="event">
-            <caption>Resource entity</caption>
-            <category>Resource</category>
-            <description>Entity: The entity used to retrieve the resource (linked to 'Event entity')</description>
-        </property>
-        <property key="resource_name" type="attribute" entityProperty="resource" required="true">
+        <property key="resource_name" type="attribute" isPath="optional" pathType="reference" entityProperty="event" required="true">
             <caption>Resource name</caption>
             <category>Resource</category>
-            <description></description>
+            <description>Attribute: Resource row identifier</description>
             <attributeTypes>
                 <attributeType name="String" />
+                <attributeType name="Enum" />
             </attributeTypes>
         </property>
-        <property key="resource_description" type="attribute" entityProperty="resource" required="false">
+        <property key="resource_description" type="attribute" isPath="optional" pathType="reference" entityProperty="event" required="false">
             <caption>Resource description</caption>
             <category>Resource</category>
-            <description></description>
-            <attributeTypes>
-                <attributeType name="String" />
-            </attributeTypes>
-        </property>
-        <property key="resource_category" type="attribute" isPath="optional" pathType="reference" entityProperty="resource" required="false">
-            <caption>Resource category</caption>
-            <category>Resource</category>
-            <description>Attribute: Seperated planner categories (Leave blank for hardcoded title)</description>
+            <description>Attribute: Resource row description</description>
             <attributeTypes>
                 <attributeType name="String" />
                 <attributeType name="Enum" />
             </attributeTypes>
         </property>
-        <property key="resource_title" type="string" required="false">
-            <caption>Resource title</caption>
+        <property key="resource_uniqueName" type="boolean" required="true" defaultValue="true">
+            <caption>Resource unique name identifier</caption>
             <category>Resource</category>
-            <description>String: Hardcoded planner title</description>
+            <description>Boolean: If yes, then the resource will only hold items related to the object. If no, then the resource will hold items with the same named resource</description>
         </property>
-        <property key="resource_sortBy" type="attribute" isPath="optional" pathType="reference" entityProperty="resource" required="false">
+        <property key="resource_form" type="form" required="false">
+            <caption>Resource page</caption>
+            <category>Resource</category>
+            <description>Page: Hyperlink for the Resource name</description>
+        </property>
+        <property key="resource_form_location" type="enumeration" defaultValue="content">
+            <caption>Resource page display type</caption>
+            <category>Resource</category>
+            <description>Enumeration: How the Resource page will be displayed</description>
+            <enumerationValues>
+                <enumerationValue key="content">Content</enumerationValue>
+                <enumerationValue key="popup">Popup</enumerationValue>
+                <enumerationValue key="modal">Modal</enumerationValue>
+            </enumerationValues>
+        </property>
+        <property key="resource_icon" type="string"  required="false">
+            <caption>Resource name icon</caption>
+            <category>Resource</category>
+            <description>String: Glyphicon displayed next to the resource name (eg: 'user' will result glyphicon-user)</description>
+        </property>
+        <property key="resource_sortBy" type="object" isList="true" required="false">
             <caption>Sort by</caption>
             <category>Resource</category>
-            <description></description>
-            <attributeTypes>
-                <attributeType name="String" />
-                <attributeType name="Enum" />
-                <attributeType name="DateTime" />
-                <attributeType name="Integer" />
-            </attributeTypes>
+            <description>List: Sort resource rows by</description>
+            <properties>
+                <property key="sort" type="attribute" isPath="optional" pathType="reference" entityProperty="../event">
+                    <caption>Attribute</caption>
+                    <category>Sort</category>
+                    <description>Attribute: Sort resource rows by</description>
+                    <attributeTypes>
+                        <attributeType name="String" />
+                        <attributeType name="Enum" />
+                        <attributeType name="DateTime" />
+                        <attributeType name="Integer" />
+                    </attributeTypes>
+                </property>
+                <property key="order" type="enumeration" defaultValue="asc">
+                    <caption>Order</caption>
+                    <category>Sort</category>
+                    <description>Enum: Sort order</description>
+                    <enumerationValues>
+                        <enumerationValue key="asc">Ascending</enumerationValue>
+                        <enumerationValue key="desc">Descending</enumerationValue>
+                    </enumerationValues>
+                </property>
+            </properties>
+        </property>
+
+        <!-- Group -->
+        <property key="groups" type="object" isList="true" required="false">
+            <caption>Groups</caption>
+            <category>Group</category>
+            <description>List: Potential grouping paths</description>
+            <properties>
+                <!-- Group resource -->
+                <property key="group_name" type="attribute" isPath="optional" pathType="reference" entityProperty="../event" required="false">
+                    <caption>Group name</caption>
+                    <category>Resource</category>
+                    <description>Attribute: Group planner resources using an identifier (If empty, will leave resources ungrouped)</description>
+                    <attributeTypes>
+                        <attributeType name="String" />
+                        <attributeType name="Enum" />
+                    </attributeTypes>
+                </property>
+                <property key="group_description" type="attribute" isPath="optional" pathType="reference" entityProperty="../event" required="false">
+                    <caption>Group description</caption>
+                    <category>Resource</category>
+                    <description>Attribute: Description for the planner group</description>
+                    <attributeTypes>
+                        <attributeType name="String" />
+                        <attributeType name="Enum" />
+                    </attributeTypes>
+                </property>
+                <property key="group_uniqueName" type="boolean" required="true" defaultValue="true">
+                    <caption>Group unique name identifier</caption>
+                    <category>Resource</category>
+                    <description>Boolean: If yes, then the resource will only hold items related to the object. If no, then the resource will hold items with the same named resource</description>
+                </property>
+                <property key="group_resource_form" type="form" required="false">
+                    <caption>Group resource page</caption>
+                    <category>Resource</category>
+                    <description>Page: Hyperlink for the Group name</description>
+                </property>
+                <property key="group_resource_form_location" type="enumeration" defaultValue="content">
+                    <caption>Group resource page display type</caption>
+                    <category>Resource</category>
+                    <description>Enumeration: How the Group page will be displayed</description>
+                    <enumerationValues>
+                        <enumerationValue key="content">Content</enumerationValue>
+                        <enumerationValue key="popup">Popup</enumerationValue>
+                        <enumerationValue key="modal">Modal</enumerationValue>
+                    </enumerationValues>
+                </property>
+                <property key="group_icon" type="string" required="false">
+                    <caption>Group name icon</caption>
+                    <category>Resource</category>
+                    <description>String: Glyphicon displayed next to the group name (eg: 'user' will result glyphicon-user)</description>
+                </property>
+
+                <!-- Group event -->
+                <property key="group_generateDate" type="boolean" required="true" defaultValue="true">
+                    <caption>Group dates auto generated</caption>
+                    <category>Event</category>
+                    <description>Boolean: If yes, then the event is automatically generated from the children in the group (First 'Start date' and last 'End date'). If no, then the event is generated with the dates set in 'Group event start date' and 'Group event end date'</description>
+                </property>
+                <property key="group_startDate" type="attribute"  isPath="optional" pathType="reference" entityProperty="../event" required="false">
+                    <caption>Group event start date</caption>
+                    <category>Event</category>
+                    <description>Attribute: Start of group event</description>
+                    <attributeTypes>
+                        <attributeType name="DateTime" />
+                    </attributeTypes>
+                </property>
+                <property key="group_endDate" type="attribute"  isPath="optional" pathType="reference" entityProperty="../event" required="false">
+                    <caption>Group event end date</caption>
+                    <category>Event</category>
+                    <description>Attribute: End of group event</description>
+                    <attributeTypes>
+                        <attributeType name="DateTime" />
+                    </attributeTypes>
+                </property>
+                <property key="group_type" type="attribute" isPath="optional" pathType="reference" entityProperty="../event" required="false">
+                    <caption>Group event type</caption>
+                    <category>Event</category>
+                    <description>Attribute: Type label</description>
+                    <attributeTypes>
+                        <attributeType name="String" />
+                        <attributeType name="Enum" />
+                    </attributeTypes>
+                </property>
+                <property key="group_type_default" type="string" required="true" defaultValue="Collectively">
+                    <caption>Default group event type</caption>
+                    <category>Event</category>
+                    <description>String: Default type label (If 'Group event type' is empty)</description>
+                </property>
+                <property key="group_colour" type="attribute" isPath="optional" pathType="reference" entityProperty="../event" required="false">
+                    <caption>Group event bar colour</caption>
+                    <category>Event</category>
+                    <description>Attribute: CSS colour (eg: '#DB3E3E', 'rgb(219, 62, 62)')</description>
+                    <attributeTypes>
+                        <attributeType name="String" />
+                        <attributeType name="Enum" />
+                    </attributeTypes>
+                </property>
+                <property key="group_event_form" type="form" required="false">
+                    <caption>Group event page</caption>
+                    <category>Event</category>
+                    <description>Page: Hyperlink for the Group event bar</description>
+                </property>
+                <property key="group_event_form_location" type="enumeration" defaultValue="content">
+                    <caption>Group event page display type</caption>
+                    <category>Event</category>
+                    <description>Enumeration: How the Group page will be displayed</description>
+                    <enumerationValues>
+                        <enumerationValue key="content">Content</enumerationValue>
+                        <enumerationValue key="popup">Popup</enumerationValue>
+                        <enumerationValue key="modal">Modal</enumerationValue>
+                    </enumerationValues>
+                </property>
+            </properties>
         </property>
     </properties>
 </widget>
