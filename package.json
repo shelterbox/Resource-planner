@@ -1,7 +1,7 @@
 {
   "name": "ResourcePlanner",
   "version": "1.0.0",
-  "description": "Render a agenda style calendar widget",
+  "description": "Render an agenda style calendar widget",
   "license": "Apache 2",
   "author": "Carter Moorse",
   "private": true,
@@ -20,6 +20,7 @@
     "npm-run-all": "^4.1.5",
     "semver": "^5.1.0",
     "shelljs": "^0.7.4",
+    "typescript": "^3.8.3",
     "xml2js": "^0.4.17"
   },
   "engines": {
@@ -32,7 +33,10 @@
   },
   "scripts": {
     "buildWidget": "grunt build",
-    "buildSCSS": "node-sass .\\src\\ResourcePlanner\\widget\\ui\\ResourcePlanner.scss .\\src\\ResourcePlanner\\widget\\ui\\ResourcePlanner.css",
-    "build": "run-s buildSCSS buildWidget"
+    "buildLib": "npm run build --prefix ./../ResourcePlannerStandalone",
+    "copyCSS": "cp ./../ResourcePlannerStandalone/dist/css/ResourcePlanner.css ./src/ResourcePlanner/widget/ui/ResourcePlanner.css",
+    "copyJS": "cp ./../ResourcePlannerStandalone/dist/js/Planner.js ./src/ResourcePlanner/lib/Planner.js",
+    "copyMap": "cp ./../ResourcePlannerStandalone/dist/js/Planner.js.map ./src/ResourcePlanner/lib/Planner.js.map",
+    "build": "run-s buildLib copyCSS copyJS copyMap buildWidget"
   }
 }

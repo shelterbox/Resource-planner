@@ -1,45 +1,25 @@
-// Custom scripts
-Date.prototype.addDays = function(d) {return new Date(this.setDate(this.getDate() + d));};
-Date.prototype.daysBetween = function(d) {return Math.round(Math.abs((this.getTime() - d.getTime()) / 864E5));};
-Date.prototype.addMonths = function(d) {return new Date(this.setMonth(this.getMonth() + d));};
-Date.prototype.monthsBetween = function(d) {return Math.abs((12 * this.getFullYear() + (this.getMonth() + 1)) - (12 * d.getFullYear() + (d.getMonth() + 1)));};
-Date.prototype.flatten = function() {return new Date(this.toDateString());};
-// Constants
-const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-
 define([
-    'dojo/_base/declare',
-    'mxui/widget/_WidgetBase',
-    'mendix/lib/MxContext',
-    'mxui/dom',
-    'dojo/dom',
-    'dojo/dom-prop',
-    'dojo/dom-geometry',
-    'dojo/dom-class',
-    'dojo/dom-style',
-    'dojo/dom-construct',
-    'dojo/_base/array',
-    'dojo/_base/lang',
-    'dojo/text',
-    'dojo/html',
-    'dojo/_base/event',
+    "ResourcePlanner/lib/Planner",
+    "dojo/_base/declare",
+    "mxui/widget/_WidgetBase",
+    "mendix/lib/MxContext",
+    "dojo/_base/lang",
+], function (planner, declare, _WidgetBase, MxContext, lang) {
+    "use strict";
 
+    var ResourcePlanner = planner.ResourcePlanner;
 
-], function (declare, _WidgetBase, MxContext, dom, dojoDom, dojoProp, dojoGeometry, dojoClass, dojoStyle, dojoConstruct, dojoArray, lang, dojoText, dojoHtml, dojoEvent) {
-    'use strict';
-
-    return declare('ResourcePlanner.widget.ResourcePlanner', [ _WidgetBase ], {
-
-
+    return declare("ResourcePlanner.widget.ResourcePlanner", [_WidgetBase], {
         // Internal variables
         _handles: null,
         _contextObj: null,
         obj_dateFrom: null,
-        obj_dateTo: null, 
+        obj_dateTo: null,
 
         // Search source
         search_dateFrom: null,
         search_dateTo: null,
+        search_dateFilter: null,
         search_dynXpath: null,
         search_statXpath: null,
 
@@ -49,418 +29,682 @@ define([
         event_endDate: null,
         event_type: null,
         event_colour: null,
+        event_form: null,
+        event_form_location: null,
 
         // Person source
         resource_column_title: null,
         resource_name: null,
         resource_description: null,
-        resource_category: null,
-        resource_category_description: null,
-        resource_title: null,
         resource_sortBy: null,
         resource_form: null,
         resource_form_location: null,
+        resource_icon: null,
+        resource_uniqueName: null,
 
-        // Saved objects
-        _domNodes: {},
-        _values: {},
-        _categories: {},
+        // Group
+        groups: null,
 
-        _getString: function(mxObject, attribute) {
+        // Planner
+        planner_name: null,
+        planner_description: null,
+
+        // Global variables
+        planner: null,
+        subscribed: new Array(),
+
+        _getString: function (mxObject, attribute) {
             var string = null;
             if (mxObject instanceof Object) {
                 string = mxObject.get(attribute);
-                string = mxObject.isEnum(attribute) ? mxObject.getEnumCaption(attribute, string) : string;
+                string = mxObject.isEnum(attribute)
+                    ? mxObject.getEnumCaption(attribute, string)
+                    : string;
             }
             return string;
         },
 
-        _fetchString: function(mxObject, path) {
+        _fetchString: function (mxObject, attribute) {
             var context = this;
             return new Promise((resolve, reject) => {
-                context._fetch(mxObject, path).then(returnObj => { resolve(context._getString(returnObj, path.attribute)) });
+                context._fetch(mxObject, attribute).then((returnObj) => {
+                    var path = context._splitPath(attribute);
+                    var obj = new Object();
+                    obj.string = context._getString(returnObj, path.attribute);
+                    obj.object = returnObj;
+                    resolve(obj);
+                });
             });
         },
 
-        _fetch: function(mxObject, path) {
+        _fetch: function (mxObject, attribute) {
+            var context = this;
             return new Promise((resolve, reject) => {
-                if (path.attribute == null || path.attribute == '') resolve(null);
+                var path = context._splitPath(attribute);
+                if (path.attribute == null || path.attribute == "")
+                    resolve(null);
                 else {
-                    if (path.path == null || path.path == '') resolve(mxObject);
-                    else mxObject.fetch(path.path, result => { resolve(result) });
+                    if (path.path == null || path.path == "") resolve(mxObject);
+                    else
+                        mxObject.fetch(path.path, (result) => {
+                            resolve(result);
+                        });
                 }
             });
         },
 
-        _splitPath: function(string_path) {
-            if (string_path == '' || string_path == null) return { path: null, attribute: null };
-            var obj = new Object;
-            obj.path = string_path.split('/');
+        _splitPath: function (string_path) {
+            if (string_path == "" || string_path == null)
+                return { path: null, attribute: null };
+            var obj = new Object();
+            obj.path = string_path.split("/");
             obj.attribute = obj.path.pop();
-            obj.path = obj.path.join('/');
+            obj.path = obj.path.join("/");
             return obj;
         },
 
-        _clear: function() {
-            this._domNodes = {};
-            this._categories = {};
-            this._values = {};
-            if (this.domNode) this.domNode.innerHTML = '';
-        },
+        _addOpenPage: function (node, entity, guid, page, pageLocation) {
+            var entityContext = new MxContext();
+            entityContext.setContext(entity, guid);
 
-        _scroll: function (int_amount) {
-            var context = this;
-            var options = { left: int_amount, top: 0 }
-            var shadowNodes = context._domNodes.context.querySelectorAll('.rp-group-right:not(.rp-heading)');
-            Object.keys(context._domNodes.sections).forEach(string_section => {
-                var section = context._domNodes.sections[string_section];
-                section.node.heading.right.scrollTo(options);
-                section.node.label.scroller.style.marginLeft = (int_amount * -1) + 'px';
-                Object.keys(section.resources).forEach(string_resource => {
-                    var resource = section.resources[string_resource];
-                    resource.node.right.scrollTo(options);
+            var showPage = function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                mx.ui.openForm(page, {
+                    location: pageLocation,
+                    context: entityContext,
                 });
-            });
-            // if (int_amount <= 0) {
-            //     shadowNodes.forEach(node => { node.style.boxShadow = 'rgb(215, 215, 215) -15px 0px 10px -10px inset, rgb(215, 215, 215) 1px 0px 0px inset'; });
-            // }
-            // else if (int_amount >= (context._domNodes.scroller.scrollWidth - context._domNodes.scroller.offsetWidth)) {
-            //     shadowNodes.forEach(node => { node.style.boxShadow = 'rgb(215, 215, 215) -1px 0px 0px inset, rgb(215, 215, 215) 15px 0px 10px -10px inset'; });
-            // }
-            // else {
-            //     shadowNodes.forEach(node => { node.style.boxShadow = 'rgb(215, 215, 215) -15px 0px 10px -10px inset, rgb(215, 215, 215) 15px 0px 10px -10px inset'; });
-            // } 
+            };
+
+            node.addEventListener("click", showPage);
+            node.style["cursor"] = "pointer";
         },
 
-        _alignEvents: function(list_data) {
-            var context = this;
-            var endDates = new Array;
-            var previousData = null;
-            for (var dataIndex = 0; dataIndex < list_data.length; dataIndex++) {
-                var data = list_data[dataIndex];
-                data.level = 0
-                if (previousData != null && previousData.nameString === data.nameString && previousData.categoryString === data.categoryString) {
-                    var date = previousData.obj.get(context.event_endDate) ? previousData.obj.get(context.event_endDate) : previousData.obj.get(context.event_startDate);
-                    endDates[previousData.level] = new Date(date).flatten();
-                }
-                else endDates = [];
-                for (var level = 0; level < endDates.length; level++) {
-                    var endDate = endDates[level];
-                    var startDate = new Date(data.obj.get(context.event_startDate)).flatten();
-                    if (endDate < startDate) {
-                        data.level = level;
-                        break;
-                    }
-                    else data.level++
-                }
-                previousData = data;
-            }
-            return list_data;
-        },
-
-        renderEvent: function (mxObject_event, string_eventColour, string_eventType, int_level, object_nodes) {
-            var context = this;
-            function calcWidth() {
-                // If event sits between 'From' query
-                if (event.startDate <= context.obj_dateFrom && (event.endDate >= context.obj_dateFrom && event.endDate <= context.obj_dateTo)) return ((context.obj_dateFrom.daysBetween(event.endDate) + 1) / context._values.daysBetween * 100) + '%';
-                // If event sits between 'To' query
-                else if ((event.startDate <= context.obj_dateTo && event.startDate >= context.obj_dateFrom) && event.endDate >= context.obj_dateTo) return ((event.startDate.daysBetween(context.obj_dateTo) + 1) / context._values.daysBetween * 100) + '%';
-                // If event sits over the query
-                else if (event.startDate <= context.obj_dateFrom && event.endDate >= context.obj_dateTo) return '100%';
-                // Standard return
-                return ((event.startDate.daysBetween(event.endDate) + 1) / context._values.daysBetween * 100) + '%';
-            }
-            // Gather event data
-            var event                   = new Object;
-            event.startDate             = new Date(mxObject_event.get(context.event_startDate)).flatten();
-            event.endDate               = mxObject_event.get(context.event_endDate) != '' ? new Date(mxObject_event.get(context.event_endDate)).flatten() : event.startDate <= new Date().flatten() ? new Date().flatten() : event.startDate;
-            event.type                  = string_eventType ? string_eventType : null;
-            // Gather event options
-            var options                 = new Object;
-            options['margin-left']      = event.startDate > context.obj_dateFrom ? (context.obj_dateFrom.daysBetween(event.startDate) / context._values.daysBetween * 100) + '%' : '0%';
-            options['width']            = calcWidth();
-            options['background-color'] = string_eventColour ? string_eventColour : '#0595DB';
-            options['margin-top']       = int_level != 0 ? `${int_level * 32}px` : '0px';
-
-            var html = event.type ? `<div class='rp-datebar-label'>${event.type}</div>` : ''; // ${(event.type ? event.type + ':' : '')}
-            html += `<div class='rp-datebar-label rp-date'>${event.startDate.toLocaleDateString()} ${mxObject_event.get(context.event_endDate) != '' ? `- ${event.endDate.toLocaleDateString()}` : '- Unfinished'}</div>`;
-            event.node = dojo.create('div', {class: 'rp-datebar', innerHTML: html}, object_nodes.list.scroller);
-            dojoStyle.set(event.node, options);
-        },
-
-        renderResource: function (string_name, string_description, mxObject_resource, object_nodes) {
-            var context = this;
-            // HTML Variables
-            var personNode = context.resource_form ? 'a' : 'div';
-            var personHTML = `<${personNode} class='rp-resource-name'><span class='glyphicon glyphicon-user spacing-outer-right'></span>${string_name}</${personNode}>`;
-            var descriptionHTML = context.resource_description ? `<div class='rp-resource-description'>${string_description}</div>` : '';
-            var HTML = `<div class='rp-resource'>${personHTML}${descriptionHTML}</div>`;
-            // Render people
-            var personNodes             = new Object;
-            personNodes.row             = dojo.create('div', {class: 'rp-row'}, object_nodes.list.scroller);
-            personNodes.left            = dojo.create('div', {class: 'rp-group-left', innerHTML: HTML}, personNodes.row);
-            personNodes.right           = dojo.create('div', {class: 'rp-group-right'}, personNodes.row);
-            if (context.resource_form) {
-                var resourceTitle = personNodes.left.querySelector('a.rp-resource-name');
-                var resourceEntity = context._splitPath(context.resource_name).path.split('/').pop();
-                var resourceContext = new MxContext();
-                resourceContext.setContext(resourceEntity, mxObject_resource.getGuid());
-                resourceTitle.addEventListener('click', event => { mx.ui.openForm(context.resource_form, { location: context.resource_form_location, context: resourceContext }); });
-            }
-            // Render scroller list
-            personNodes.list            = new Object;
-            personNodes.list.scroller   = dojo.create('div', {class: 'rp-scroller', style: `width: ${context._values.scrollWidth}%`}, personNodes.right);
-            personNodes.list.items      = new Array;
-
-            return personNodes;
-        },
-
-        renderSection: function (string_title, string_description) {
-            var context = this;
-            function shiftScrollEvent(e) {
-                if (e.shiftKey && e.deltaY != 0) { 
-                    e.preventDefault();
-                    context._domNodes.scroller.scrollLeft = e.deltaY + context._domNodes.scroller.scrollLeft;
-                }
-                else if (e.deltaX != 0) {
-                    e.preventDefault();
-                    context._domNodes.scroller.scrollLeft = e.deltaX + context._domNodes.scroller.scrollLeft;
-                }
-            }
-            function gDateLabels() {
-                var returnStr = '';
-                var loopDate = new Date(context.obj_dateFrom);
-                var today = new Date().flatten();
-
-                for (var i = 0; i < context._values.daysBetween; i++) {
-                    returnStr += `<span class='rp-label-date' style='width: ${context._values.daysWidth}%; ${loopDate.valueOf() == today.valueOf() ? 'background: #efefef;' : ''}'><div class='rp-line'></div>${loopDate.getDate()}</span>`;
-                    loopDate = loopDate.addDays(1);
-                }
-                return returnStr;
-            }
-            function gMonthLabels() {
-                var returnStr = '';
-                var loopDate = new Date(context.obj_dateFrom);
-                var monthsWidth = 0;
-                loopDate.setDate(1);
-
-                for (var i = 0; i < context._values.monthsBetween; i++) {
-                    var monthEnd = new Date(loopDate.getFullYear(), loopDate.getMonth() + 1, 0);
-                    if (context.obj_dateFrom.getMonth() == loopDate.getMonth()) monthsWidth = (context.obj_dateFrom.daysBetween(monthEnd) + 1) / context._values.daysBetween * 100;
-                    else if (context.obj_dateTo.getMonth() == loopDate.getMonth()) monthsWidth = (loopDate.daysBetween(context.obj_dateTo) + 1) / context._values.daysBetween * 100;
-                    else monthsWidth = (loopDate.daysBetween(monthEnd) + 1) / context._values.daysBetween * 100;
-                    returnStr += `<div class='rp-label-date' style='width: ${monthsWidth}%;'><h3>${months[loopDate.getMonth()]}</h3><span class='rp-label-year'>${loopDate.getFullYear()}</span></div>`;
-                    loopDate = loopDate.addMonths(1);
-                }               
-                return returnStr;
-            }
-            string_title = string_title ? string_title : context.resource_title ? context.resource_title : 'Planner';
-            // Render section
-            var section = new Object;
-            // Body
-            section.wrapper             = dojo.create('div', {class: 'rp-group-wrapper'}, context._domNodes.context);
-            section.wrapper.addEventListener('wheel', shiftScrollEvent);
-            // Heading
-            section.heading             = new Object;
-            section.heading.row         = dojo.create('div', {class: 'rp-row rp-heading'}, section.wrapper);
-            section.heading.left        = dojo.create('div', {class: 'rp-group-left'}, section.heading.row);
-            section.heading.right       = dojo.create('div', {class: 'rp-group-right'}, section.heading.row);
-            section.heading.title       = dojo.create('h3', {class: 'rp-group-title', innerHTML: string_title}, section.heading.left);
-            section.heading.description = dojo.create('span', {class: 'rp-group-description', innerHTML: string_description}, section.heading.left);
-            section.heading.scroller    = dojo.create('div', {class: 'rp-scroller', innerHTML: gMonthLabels(section), style: 'width: ' + context._values.scrollWidth + '%'}, section.heading.right);
-            // Label
-            section.label               = new Object;
-            section.label.row           = dojo.create('div', {class: 'rp-row rp-label'}, section.wrapper);
-            section.label.left          = dojo.create('div', {class: 'rp-group-left', innerHTML: `<span>${context.resource_column_title ? context.resource_column_title : 'Name'}: </span>` }, section.label.row);
-            section.label.right         = dojo.create('div', {class: 'rp-group-right'}, section.label.row);
-            section.label.scroller      = dojo.create('div', {class: 'rp-scroller', innerHTML: gDateLabels(), style: 'width: ' + context._values.scrollWidth + '%'}, section.label.right);
-            // List
-            section.list                = new Object;
-            section.list.scroller       = dojo.create('div', {class: 'rp-group-list'}, section.wrapper);
-            section.list.items          = new Array;
-            return section;
-        },
-
-        renderEvents: function(list_data) {
-            var context = this;
-            this._domNodes.sections = new Object;
-            return new Promise((resolve, reject) => {
-                for (var index = 0; index < list_data.length; index++) {
-                    var data = list_data[index];
-                    context._domNodes.sections[data.categoryString] = context._domNodes.sections[data.categoryString] ? context._domNodes.sections[data.categoryString] : new Object;
-                    // Process section
-                    var section         = context._domNodes.sections[data.categoryString];
-                    section.node        = section.node ? section.node : context.renderSection(data.categoryString, data.catDescString);
-                    section.resources   = section.resources ? section.resources : new Object;
-                    // Process resource
-                    var resource        = section.resources[data.nameString] ? section.resources[data.nameString] : new Object;
-                    resource.node       = resource.node ? resource.node : context.renderResource(data.nameString, data.descriptionString, data.resourceObject, section.node);
-                    resource.events     = resource.events ? resource.events : new Object;
-                    resource.size       = resource.size ? resource.size : 1;
-                    resource.size       = data.level + 1 > resource.size ? data.level + 1 : resource.size;
-                    resource.node.list.scroller.style.height = `${resource.size * 32}px`;
-                    section.resources[data.nameString] = resource;
-                    // Process event
-                    var event           = resource.events[data.obj.getGuid()] ? resource.events[data.obj.getGuid()] : new Object;
-                    event.node          = event.node ? event.node : context.renderEvent(data.obj, data.colourString, data.typeString, data.level, resource.node);
-                    resource.events[data.obj.getGuid()] = event;
-                    context._domNodes.sections[data.categoryString] = section;
-                }
-                resolve();
-            })
-        },
-
-        _renderTable: function (list_data) {
-            var context = this;
-            return new Promise((resolve, reject) => {
-                if (list_data.length != 0) {
-                    // Generate all values for table
-                    this._values.daysBetween =  this.obj_dateFrom.daysBetween(this.obj_dateTo) + 1;
-                    this._values.daysWidth =  100 / this._values.daysBetween;
-                    this._values.monthsBetween = this.obj_dateFrom.monthsBetween(this.obj_dateTo) + 1;
-                    this._values.scrollWidth = this._values.monthsBetween * 100;
-                    // Create wrapper
-                    this._domNodes.context = dojo.create('div', {class: 'rp-wrapper'}, context.domNode);
-                    // Create resizer
-                    this._domNodes.resizer = dojo.create('div', {class: 'rp-resizer', style: 'margin-left: 20%;'}, context._domNodes.context);
-                    this._domNodes.resizer.addEventListener('mousedown', downEvent);
-                    // Create scrollbar
-                    this._domNodes.scroller = dojo.create('div', {class: 'rp-scroll-wrapper'}, context._domNodes.context);
-                    dojo.create('div', {class: 'rp-scroll', style: 'width: ' + context._values.scrollWidth + '%'}, this._domNodes.scroller);
-                    this._domNodes.scroller.addEventListener('scroll', scrollEvent);
-                    // Events
-                    function scrollEvent(e) { context._scroll(context._domNodes.scroller.scrollLeft); }
-                    function downEvent(e) {
-                        window.addEventListener('mouseup', upEvent);
-                        window.addEventListener('mousemove', dragEvent);
-                    }
-                    function dragEvent(e) {
-                        var left = e.clientX - context._domNodes.context.getBoundingClientRect().left;
-                        var threshold = 100;
-                        if (left > threshold && left < (context._domNodes.context.offsetWidth - threshold)) {
-                            var percentageLeft = (left / context._domNodes.context.offsetWidth) * 100;
-                            var percentageRight = 100 - percentageLeft;
-                            context._domNodes.resizer.style.marginLeft = `${percentageLeft}%`;
-                            context._domNodes.scroller.style.marginLeft = `${percentageLeft}%`;
-                            context._domNodes.scroller.style.width = `${percentageRight}%`;
-                            context._domNodes.context.querySelectorAll('.rp-group-left').forEach(element => { element.style.width = `${percentageLeft}%`; });
-                            context._domNodes.context.querySelectorAll('.rp-group-right').forEach(element => { element.style.width = `${percentageRight}%`; });
-                        }
-                    }
-                    function upEvent (e) { window.removeEventListener('mousemove', dragEvent); }
-                    // Loop through the events and render them
-                    this.renderEvents(list_data).then(() => { resolve(); });
-                }
-                else reject('No data found');
-            })
-        },
-
-        fetchData: function (mxObject_event) {
-            var context = this;
-            return new Promise((resolve, reject) => {
-                var event = { obj: mxObject_event };
-                try {
-                    // Name
-                    var namePath = context._splitPath(context.resource_name);
-                    var namePromise = context._fetch(mxObject_event, namePath);
-                    // Description
-                    var descriptionPath = context._splitPath(context.resource_description);
-                    var descriptionPromise = context._fetchString(mxObject_event, descriptionPath);
-                    // Category
-                    var categoryPath = context._splitPath(context.resource_category);
-                    var categoryPromise = context._fetchString(mxObject_event, categoryPath);
-                    // Colour
-                    var colourPath = context._splitPath(context.event_colour);
-                    var colourPromise = context._fetchString(mxObject_event, colourPath);
-                    // Type
-                    var typePath = context._splitPath(context.event_type);
-                    var typePromise = context._fetchString(mxObject_event, typePath);
-                    // Category description
-                    var catDescPath = context._splitPath(context.resource_category_description);
-                    var catDescPromise = context._fetchString(mxObject_event, catDescPath);
-                    // Retreived data
-                    namePromise.then(resourceObject => {
-                        event.nameString = context._getString(resourceObject, namePath.attribute);
-                        event.resourceObject = resourceObject;
-                        descriptionPromise.then(descriptionString =>            { event.descriptionString = descriptionString;
-                            categoryPromise.then(categoryString =>              { event.categoryString = categoryString;
-                                colourPromise.then(colourString =>              { event.colourString = colourString;
-                                    typePromise.then(typeString =>              { event.typeString = typeString;
-                                        catDescPromise.then(catDescString =>    { event.catDescString = catDescString;
-                                            resolve(event);
-                                        })
-                                    })
-                                })
-                            })
-                        })
-                    })
-                }
-                catch(e) {
-                    console.log(e);
-                    reject('Could not fetch data');
-                }
+        _displayTemplate: function (node, entity, guid, page) {
+            var entityContext = new MxContext();
+            entityContext.setContext(entity, guid);
+            mx.ui.openForm(page, {
+                location: "content",
+                context: entityContext,
+                domNode: node,
             });
         },
 
-        fetchAllData: function() {
+        fetchData: async function (mxObject_event) {
             var context = this;
-            var xpathStart = '[' + context.event_startDate + ' >= ' + context.obj_dateFrom.valueOf() + ' or ' + context.event_endDate + ' >= ' + context.obj_dateFrom.valueOf() + ']';
-            var xpathEnd = '[' + context.event_startDate + ' <= ' + (context.obj_dateTo.valueOf() + 1000*60*60*23) + ' or ' + context.event_endDate + ' <= ' + (context.obj_dateTo.valueOf() + 1000*60*60*23) + ']';
-            var xpath = '//' + context.event + xpathStart + xpathEnd + context.search_statXpath + (context.search_dynXpath ? context._contextObj.get(context.search_dynXpath) : '');
-            xpath = xpath.replace(/(\'\[\%CurrentObject\%\]\')/gi, context._contextObj.getGuid());
-            var sortOrder = new Array;
+            var event = new Object();
+            var resource = new Object();
+            var groups = new Array();
+
+            event.object = mxObject_event;
+            // Resource name
+            var fetchResoure_name = await context._fetchString(
+                mxObject_event,
+                context.resource_name
+            );
+            resource.object = fetchResoure_name.object;
+            resource.name = fetchResoure_name.string;
+            // Resource description
+            var fetchResoure_description = await context._fetchString(
+                mxObject_event,
+                context.resource_description
+            );
+            resource.description = fetchResoure_description.string;
+
+            for (var index = 0; index < context.groups.length; index++) {
+                var group = context.groups[index];
+                var grouping = new Object();
+                // Group name
+                var fetch_groupName = await context._fetchString(
+                    mxObject_event,
+                    group.group_name
+                );
+                grouping.object = fetch_groupName.object;
+                grouping.name = fetch_groupName.string;
+                // Group description
+                var fetch_groupDescription = await context._fetchString(
+                    mxObject_event,
+                    group.group_description
+                );
+                grouping.description = fetch_groupDescription.string;
+                // Group type
+                var fetch_groupType = await context._fetchString(
+                    mxObject_event,
+                    group.group_type
+                );
+                grouping.type =
+                    fetch_groupType.string && fetch_groupType.string != ""
+                        ? fetch_groupType.string
+                        : group.group_type_default;
+                // Group colour
+                var fetch_groupColour = await context._fetchString(
+                    mxObject_event,
+                    group.group_colour
+                );
+                grouping.colour = fetch_groupColour.string;
+                // Event start date
+                var fetch_groupStartDate = await context._fetchString(
+                    mxObject_event,
+                    group.group_startDate
+                );
+                grouping.startDate =
+                    fetch_groupStartDate.string != "" &&
+                    fetch_groupStartDate.string != null
+                        ? new Date(fetch_groupStartDate.string)
+                        : null;
+                // Event end date
+                var fetch_groupEndDate = await context._fetchString(
+                    mxObject_event,
+                    group.group_endDate
+                );
+                grouping.endDate =
+                    fetch_groupEndDate.string != "" &&
+                    fetch_groupEndDate.string != null
+                        ? new Date(fetch_groupEndDate.string)
+                        : null;
+                // Group form
+                grouping.resource_form = group.group_resource_form;
+                grouping.resource_form_location =
+                    group.group_resource_form_location;
+                grouping.event_form = group.group_event_form;
+                grouping.event_form_location = group.group_event_form_location;
+                grouping.icon = group.group_icon;
+                grouping.generateDate = group.group_generateDate;
+                grouping.uniqueName = group.group_uniqueName;
+                groups[index] = grouping;
+
+                // Subscribe event changes
+                if (
+                    grouping.object &&
+                    !context.subscribed.find(
+                        (obj) => obj.id == grouping.object.getGuid()
+                    )
+                ) {
+                    context.subscribed.push({
+                        id: grouping.object.getGuid(),
+                        subscription: mx.data.subscribe({
+                            guid: grouping.object.getGuid(),
+                            callback: (guid) =>
+                                mx.data.get({
+                                    guid: event.object.getGuid(),
+                                    callback: (obj) =>
+                                        context
+                                            .fetchData(obj)
+                                            .then((data) =>
+                                                context.renderData(data)
+                                            ),
+                                }),
+                        }),
+                    });
+                }
+            }
+            // Event start date
+            var fetch_eventStartDate = await context._fetchString(
+                mxObject_event,
+                context.event_startDate
+            );
+            event.startDate =
+                fetch_eventStartDate.string != "" &&
+                fetch_eventStartDate != null
+                    ? new Date(fetch_eventStartDate.string)
+                    : null;
+            // Event end date
+            var fetch_eventEndDate = await context._fetchString(
+                mxObject_event,
+                context.event_endDate
+            );
+            event.endDate =
+                fetch_eventEndDate.string != "" && fetch_eventEndDate != null
+                    ? new Date(fetch_eventEndDate.string)
+                    : null;
+            // Event colour
+            var fetchEvent_colour = await context._fetchString(
+                mxObject_event,
+                context.event_colour
+            );
+            event.colour = fetchEvent_colour.string;
+            // Event type
+            var fetchEvent_type = await context._fetchString(
+                mxObject_event,
+                context.event_type
+            );
+            event.type = fetchEvent_type.string;
+            // Subscribe event changes
+            if (
+                event.object &&
+                !context.subscribed.find(
+                    (obj) => obj.id == event.object.getGuid()
+                )
+            ) {
+                context.subscribed.push({
+                    id: event.object.getGuid(),
+                    subscription: mx.data.subscribe({
+                        guid: event.object.getGuid(),
+                        callback: (guid) =>
+                            mx.data.get({
+                                guid: guid,
+                                callback: (obj) =>
+                                    context
+                                        .fetchData(obj)
+                                        .then((data) =>
+                                            context.renderData(data)
+                                        ),
+                            }),
+                    }),
+                });
+            }
+
+            // Create data object
+            var data = {
+                event: event,
+                resource: resource,
+                groups: groups,
+            };
+            return data;
+        },
+
+        renderData: function (data) {
+            var context = this;
+
+            var groups = data.groups;
+            var resource = data.resource;
+            var event = data.event;
+
+            var objContext = context.planner;
+
+            for (var index = 0; index < groups.length; index++) {
+                var group = groups[index];
+                // Decide whether to use group or planner
+                if (group.name) {
+                    var groupIdentifier = group.uniqueName
+                        ? group.object.getGuid()
+                        : group.name;
+                    objContext = objContext.addGroup(
+                        groupIdentifier,
+                        group.name,
+                        group.description,
+                        group.type,
+                        group.colour
+                    );
+                    if (!group.generateDate) {
+                        objContext.groupEvent.setDates(
+                            group.startDate,
+                            group.endDate
+                        );
+                        objContext.generatedEvent = false;
+                    }
+                }
+
+                // Set glyphicon group
+                if (
+                    group.name != "" &&
+                    group.name != null &&
+                    group.icon &&
+                    !objContext.resourceRow.getAttribute("data-icon")
+                ) {
+                    let node = objContext.resourceRow.firstElementChild.querySelector(
+                        "#name"
+                    );
+                    let iconNode = document.createElement("span");
+                    let nameNode = document.createElement("span");
+                    nameNode.setAttribute("id", "name");
+                    nameNode.innerText = node.innerText;
+                    node.innerText = null;
+                    node.removeAttribute("id");
+                    iconNode.classList.add(
+                        "glyphicon",
+                        "spacing-outer-right",
+                        "glyphicon-" + group.icon
+                    );
+                    node.insertAdjacentElement("afterbegin", iconNode);
+                    node.insertAdjacentElement("beforeend", nameNode);
+                    objContext.resourceRow.setAttribute("data-icon", "true");
+                }
+
+                // Add edit page listener group resource
+                if (
+                    group.name != "" &&
+                    group.name != null &&
+                    group.resource_form &&
+                    !objContext.resourceRow.getAttribute("data-event")
+                ) {
+                    let node = objContext.resourceRow.firstElementChild.querySelector(
+                        "div.rp-label.rp-label-subtitle"
+                    );
+                    context._addOpenPage(
+                        node,
+                        context._splitPath(group.name).path.split("/").pop(),
+                        group.object.getGuid(),
+                        group.resource_form,
+                        group.resource_form_location
+                    );
+                    node.classList.add("btn-link", "text-primary");
+                    objContext.resourceRow.setAttribute("data-event", "true");
+                }
+
+                // Add edit page listener group event
+                if (
+                    group.name != "" &&
+                    group.name != null &&
+                    group.event_form &&
+                    !objContext.groupEvent.node.getAttribute("data-event")
+                ) {
+                    let node = objContext.groupEvent.node;
+                    context._addOpenPage(
+                        node,
+                        context._splitPath(group.name).path.split("/").pop(),
+                        group.object.getGuid(),
+                        group.event_form,
+                        group.event_form_location
+                    );
+                    node.classList.add("rp-eventListener");
+                    objContext.groupEvent.node.setAttribute(
+                        "data-event",
+                        "true"
+                    );
+                }
+
+                // Add start task button
+                if (
+                    group.name != "" &&
+                    group.name != null &&
+                    !group.generateDate &&
+                    !group.startDate &&
+                    !group.endDate &&
+                    !objContext.resourceRow.getAttribute("data-new-button")
+                ) {
+                    let node = document.createElement("button");
+                    node.innerText = "Start task";
+                    node.setAttribute("title", "Start task");
+                    node.classList.add("btn", "btn-primary");
+                    node.style["float"] = "right";
+                    node.style["height"] = "100%";
+                    node.style["marginRight"] = "10px";
+                    objContext.resourceRow.firstElementChild
+                        .querySelector("div.rp-group-icon")
+                        .insertAdjacentElement("afterend", node);
+                    context._addOpenPage(
+                        node,
+                        context._splitPath(group.name).path.split("/").pop(),
+                        group.object.getGuid(),
+                        group.event_form,
+                        group.event_form_location
+                    );
+                    objContext.resourceRow.setAttribute(
+                        "data-new-button",
+                        "true"
+                    );
+                } else if (
+                    !group.generateDate &&
+                    (group.startDate || group.endDate) &&
+                    objContext.resourceRow.getAttribute("data-new-button")
+                ) {
+                    let newButton = objContext.resourceRow.firstElementChild.querySelector(
+                        "button"
+                    );
+                    if (newButton) newButton.remove();
+                    objContext.resourceRow.removeAttribute("data-new-button");
+                }
+            }
+
+            // Add resource and event to planner/group
+            var resourceIdentifier = context.resource_uniqueName
+                ? resource.object.getGuid()
+                : resource.name;
+            var resourceObj = objContext.addResource(
+                resourceIdentifier,
+                resource.name,
+                resource.description
+            );
+            var eventObj = resourceObj.addEvent(
+                event.object.getGuid(),
+                event.startDate,
+                event.endDate,
+                event.type,
+                event.colour
+            );
+
+            // Display resource template
+            // if (context.resource_template && !resourceObj.resourceRow.getAttribute('data-template')) {
+            //     context._displayTemplate(resourceObj.resourceRow.firstElementChild, context._splitPath(context.resource_name).path.split('/').pop(), resource.object.getGuid(), context.resource_template);
+            //     resourceObj.resourceRow.setAttribute('data-template', 'true');
+            // }
+
+            // Set glyphicon resource
+            if (
+                context.resource_icon &&
+                !resourceObj.resourceRow.getAttribute("data-icon")
+            ) {
+                let node = resourceObj.resourceRow.firstElementChild.querySelector(
+                    "#name"
+                );
+                let iconNode = document.createElement("span");
+                let nameNode = document.createElement("span");
+                nameNode.setAttribute("id", "name");
+                nameNode.innerText = node.innerText;
+                node.innerText = null;
+                node.removeAttribute("id");
+                iconNode.classList.add(
+                    "glyphicon",
+                    "spacing-outer-right",
+                    "glyphicon-" + context.resource_icon
+                );
+                node.insertAdjacentElement("afterbegin", iconNode);
+                node.insertAdjacentElement("beforeend", nameNode);
+                resourceObj.resourceRow.setAttribute("data-icon", "true");
+            }
+
+            // Add edit page listener resource
+            if (
+                context.resource_form &&
+                !resourceObj.resourceRow.getAttribute("data-event")
+            ) {
+                let node = resourceObj.resourceRow.firstElementChild.querySelector(
+                    "div.rp-label.rp-label-subtitle"
+                );
+                context._addOpenPage(
+                    node,
+                    context
+                        ._splitPath(context.resource_name)
+                        .path.split("/")
+                        .pop(),
+                    resource.object.getGuid(),
+                    context.resource_form,
+                    context.resource_form_location
+                );
+                node.classList.add("btn-link", "text-primary");
+                resourceObj.resourceRow.setAttribute("data-event", "true");
+            }
+
+            // Add edit page listener event
+            if (
+                context.event_form &&
+                !eventObj.node.getAttribute("data-event")
+            ) {
+                let node = eventObj.node;
+                context._addOpenPage(
+                    node,
+                    context._splitPath(context.event).path.split("/").pop(),
+                    event.object.getGuid(),
+                    context.event_form,
+                    context.event_form_location
+                );
+                eventObj.node.setAttribute("data-event", "true");
+            }
+
+            // Add start task button
+            if (
+                !event.startDate &&
+                !event.endDate &&
+                !resourceObj.resourceRow.getAttribute("data-new-button")
+            ) {
+                let node = document.createElement("button");
+                node.innerText = "Start task";
+                node.setAttribute('title', 'Start task');
+                node.classList.add("btn", "btn-primary");
+                node.style["float"] = "right";
+                node.style["height"] = "100%";
+                resourceObj.resourceRow.firstElementChild.insertAdjacentElement(
+                    "afterbegin",
+                    node
+                );
+                context._addOpenPage(
+                    node,
+                    context._splitPath(context.event).path.split("/").pop(),
+                    event.object.getGuid(),
+                    context.event_form,
+                    context.event_form_location
+                );
+                resourceObj.resourceRow.setAttribute("data-new-button", "true");
+            } else if (
+                !event.generateDate &&
+                (event.startDate || event.endDate) &&
+                resourceObj.resourceRow.getAttribute("data-new-button")
+            ) {
+                let newButton = resourceObj.resourceRow.firstElementChild.querySelector(
+                    "button"
+                );
+                if (newButton) newButton.remove();
+                resourceObj.resourceRow.removeAttribute("data-new-button");
+            }
+        },
+
+        generateXPath: function () {
+            var context = this;
+            var xpathStart =
+                "[" +
+                context.event_startDate +
+                " >= " +
+                context.planner.dateFrom.valueOf() +
+                " or " +
+                context.event_endDate +
+                " >= " +
+                context.planner.dateFrom.valueOf() +
+                "]";
+            var xpathEnd =
+                "[" +
+                context.event_startDate +
+                " <= " +
+                (context.planner.dateTo.valueOf() + 1000 * 60 * 60 * 23) +
+                " or " +
+                context.event_endDate +
+                " <= " +
+                (context.planner.dateTo.valueOf() + 1000 * 60 * 60 * 23) +
+                "]";
+            var xpath =
+                "//" +
+                context.event +
+                (context.search_dateFilter ? xpathStart + xpathEnd : "") +
+                context.search_statXpath +
+                (context.search_dynXpath
+                    ? context._contextObj.get(context.search_dynXpath)
+                    : "");
+            xpath = xpath.replace(
+                /(\'\[\%CurrentObject\%\]\')/gi,
+                context._contextObj.getGuid()
+            );
+            return xpath;
+        },
+
+        generateSortOrder: function () {
+            var context = this;
+            var sortOrder = new Array();
             for (var x = 0; x < context.resource_sortBy.length; x++) {
                 sortOrder.push(Object.values(context.resource_sortBy[x]));
             }
-            sortOrder.push([context.event_startDate, 'asc']);
+            // sortOrder.push([context.event_startDate, 'asc']);
+            return sortOrder;
+        },
+
+        fetchAllData: function () {
+            var context = this;
+            var xpath = context.generateXPath();
+            var sortOrder = context.generateSortOrder();
             return new Promise((resolve, reject) => {
                 try {
                     mx.data.get({
                         xpath: xpath,
                         filter: { sort: sortOrder },
-                        callback: mxList_event => {
-                            var returnList = new Array;
-                            var listCount = mxList_event.length;
-                            if (listCount == 0) resolve(new Array);
-                            mxList_event.forEach((mxObject_event, event_index) => {
-                                var fetchEventData = context.fetchData(mxObject_event);
-                                fetchEventData.then(data => {
-                                    returnList[event_index] = data;
-                                    if (--listCount <= 0) resolve(returnList);
+                        callback: (events) => {
+                            var dataList = new Array();
+                            var itemNum = events.length;
+                            if (events instanceof Array && events.length)
+                                events.forEach((event, index) => {
+                                    context
+                                        .fetchData(event)
+                                        .then((data) => {
+                                            dataList[index] = data;
+                                            if (--itemNum <= 0) {
+                                                dataList.forEach((data) =>
+                                                    context.renderData(data)
+                                                );
+                                                resolve(dataList);
+                                            }
+                                        })
+                                        .catch((reason) => reject(reason));
                                 });
-                            });
-                        }
+                            else resolve();
+                        },
                     });
-                }
-                catch(e) {
-                    console.log(e);
-                    reject('Could not fetch data')
+                } catch (e) {
+                    reject("Error: Could not fetch data");
                 }
             });
         },
-        
+
         render: function () {
             var context = this;
             // Instantiate dates
-            this.obj_dateFrom = new Date(this._contextObj.get(this.search_dateFrom)).flatten();
-            this.obj_dateTo = new Date(this._contextObj.get(this.search_dateTo)).flatten();
-            // Render inital table
-            if (this.obj_dateFrom.monthsBetween(this.obj_dateTo) < 9) {
+            var fromDate = this._contextObj.get(this.search_dateFrom);
+            var toDate = this._contextObj.get(this.search_dateTo);
+            this.obj_dateFrom =
+                fromDate != "" && fromDate != null ? new Date(fromDate) : null;
+            this.obj_dateTo =
+                toDate != "" && toDate != null ? new Date(toDate) : null;
+            // Remove existing subscriptions
+            this.subscribed.forEach((subscription) =>
+                mx.data.unsubscribe(subscription.subscription)
+            );
+            this.subscribed = new Array();
+            // Setup planner
+            var plannerTitle = this.planner_name
+                ? this.planner_name
+                : "Planner";
+            var plannerDescription = this.planner_description
+                ? this.planner_description
+                : "Plan events";
+            if (
+                this.obj_dateFrom &&
+                this.obj_dateTo &&
+                this.obj_dateFrom.valueOf() < this.obj_dateTo.valueOf()
+            ) {
+                this._hideErrorMessage();
+                if (this.planner)
+                    this.planner.setDates(this.obj_dateFrom, this.obj_dateTo);
+                else
+                    this.planner = new ResourcePlanner(
+                        this.domNode,
+                        this.obj_dateFrom,
+                        this.obj_dateTo,
+                        plannerTitle,
+                        plannerDescription
+                    );
+                this.planner.resourceColumnName = this.resource_column_title
+                    ? this.resource_column_title
+                    : "Data";
+                this.planner.render();
+                // Render inital table
                 var pid = mx.ui.showProgress();
-                var data = context.fetchAllData();
-                data.then(function(list_data) {
-                    list_data = context._alignEvents(list_data);
-                    // Clear table
-                    context._clear();
-                    context._renderTable(list_data).then(() => {
-                        mx.ui.hideProgress(pid);
-                    }, message => {
-                        mx.ui.hideProgress(pid);
-                        context._domMessage(message);
+                context
+                    .fetchAllData()
+                    .then((dataList) => mx.ui.hideProgress(pid))
+                    .catch((reason) => {
+                        console.error(reason);
+                        this._showErrorMessage(reason);
                     });
-                });
+            } else {
+                this._showErrorMessage("Error: Invalid date range");
             }
-            else context._domMessage('Date range > 8 months');
         },
 
         constructor: function () {
@@ -468,44 +712,62 @@ define([
         },
 
         postCreate: function () {
-            logger.debug(this.id + '.postCreate');
+            logger.debug(this.id + ".postCreate");
         },
 
         update: function (obj, callback) {
             var context = this;
 
-            logger.debug(this.id + '.update');
+            logger.debug(this.id + ".update");
 
             this._contextObj = obj;
             this._updateRendering(callback);
-            
+
             this.render();
 
             this.subscribe({
                 guid: context._contextObj.getGuid(),
-                callback: context.render
+                callback: context.render,
             });
         },
 
         resize: function (box) {
-            logger.debug(this.id + '.resize');
+            logger.debug(this.id + ".resize");
         },
 
         uninitialize: function () {
-            logger.debug(this.id + '.uninitialize');
+            logger.debug(this.id + ".uninitialize");
         },
 
-        _domMessage: function(message) {
-            this.domNode.innerHTML = '';
-            var element = document.createElement('p');
-            var text = document.createTextNode(message);
-            element.appendChild(text);
-            this.domNode.appendChild(element);
-            element.setAttribute('class', 'text-center');
+        _showErrorMessage: function (message) {
+            if (this.domNode instanceof HTMLElement) {
+                var element = this.domNode.querySelector("div#error");
+                if (element instanceof HTMLElement) {
+                    element.innerText = message;
+                } else {
+                    element = document.createElement("div");
+                    element.innerText = message;
+                    element.classList.add(
+                        "alert",
+                        "alert-danger",
+                        "text-center"
+                    );
+                    element.setAttribute("id", "error");
+                    this.domNode.appendChild(element);
+                }
+            }
+        },
+
+        _hideErrorMessage: function () {
+            if (this.domNode instanceof HTMLElement) {
+                var element = this.domNode.querySelector("div#error");
+                if (element instanceof HTMLElement)
+                    this.domNode.removeChild(element);
+            }
         },
 
         _updateRendering: function (callback) {
-            logger.debug(this.id + '._updateRendering');
+            logger.debug(this.id + "._updateRendering");
 
             // if (this._contextObj !== null) {
             //     dojoStyle.set(this.domNode, 'display', 'block');
@@ -513,38 +775,44 @@ define([
             //     dojoStyle.set(this.domNode, 'display', 'none');
             // }
 
-            this._executeCallback(callback, '_updateRendering');
+            this._executeCallback(callback, "_updateRendering");
         },
 
         // Shorthand for running a microflow
         _execMf: function (mf, guid, cb) {
-            logger.debug(this.id + '._execMf');
+            logger.debug(this.id + "._execMf");
             if (mf && guid) {
-                mx.ui.action(mf, {
-                    params: {
-                        applyto: 'selection',
-                        guids: [guid]
+                mx.ui.action(
+                    mf,
+                    {
+                        params: {
+                            applyto: "selection",
+                            guids: [guid],
+                        },
+                        callback: lang.hitch(this, function (objs) {
+                            if (cb && typeof cb === "function") {
+                                cb(objs);
+                            }
+                        }),
+                        error: function (error) {
+                            console.debug(error.description);
+                        },
                     },
-                    callback: lang.hitch(this, function (objs) {
-                        if (cb && typeof cb === 'function') {
-                            cb(objs);
-                        }
-                    }),
-                    error: function (error) {
-                        console.debug(error.description);
-                    }
-                }, this);
+                    this
+                );
             }
         },
 
         // Shorthand for executing a callback, adds logging to your inspector
         _executeCallback: function (cb, from) {
-            logger.debug(this.id + '._executeCallback' + (from ? ' from ' + from : ''));
-            if (cb && typeof cb === 'function') {
+            logger.debug(
+                this.id + "._executeCallback" + (from ? " from " + from : "")
+            );
+            if (cb && typeof cb === "function") {
                 cb();
             }
-        }
+        },
     });
 });
 
-require(['ResourcePlanner/widget/ResourcePlanner']);
+require(["ResourcePlanner/widget/ResourcePlanner"]);

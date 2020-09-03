@@ -1,114 +1,217 @@
-.rp-wrapper {
+.rp-main-wrapper {
   position: relative; }
-  .rp-wrapper .rp-scroll-wrapper {
-    overflow-x: scroll;
-    width: 80%;
-    margin-left: auto; }
-    .rp-wrapper .rp-scroll-wrapper > .rp-scroll {
-      height: 1px; }
-  .rp-wrapper .rp-resizer {
+  .rp-main-wrapper > .rp-main-control {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    margin: 25px;
+    z-index: 4; }
+
+.rp-btn {
+  background: #ffffff;
+  border: 1px solid;
+  border-color: #d7d7d7;
+  cursor: pointer;
+  transition: 0.3s all ease;
+  min-width: 20px;
+  min-height: 26px;
+  padding: 0 10px !important;
+  font-size: 0.75em !important; }
+  .rp-btn:hover {
+    background: #aaaaaa; }
+
+.rp-btn-group {
+  white-space: nowrap;
+  display: flex; }
+  .rp-btn-group > *:not(:first-child) {
+    border-left: none;
+    border-radius: 0; }
+  .rp-btn-group > *:first-child {
+    border-radius: 4px 0 0 4px; }
+  .rp-btn-group > *:last-child {
+    border-radius: 0 4px 4px 0; }
+
+.rp-main {
+  position: relative;
+  display: flex;
+  cursor: default;
+  max-height: 80vh;
+  border: 1px solid #d7d7d7;
+  border-radius: 4px;
+  overflow: scroll; }
+  .rp-main > .rp-col > .rp-wrapper {
+    position: relative;
+    box-shadow: 1px 0 #d7d7d7;
+    background: #ffffff; }
+  .rp-main > .rp-col.rp-resources {
+    position: sticky;
+    left: 0;
+    z-index: 4; }
+  .rp-main a {
+    cursor: pointer; }
+  .rp-main .rp-sticky {
+    position: sticky;
+    top: 0;
+    z-index: 3;
+    background: #ffffff; }
+  .rp-main .rp-resizer {
     position: absolute;
     height: 100%;
     width: 10px;
-    margin-left: 20%;
-    left: -5px;
-    z-index: 2;
+    right: -5px;
+    top: 0;
+    z-index: 4;
     transition: 0.3s background ease;
     cursor: col-resize;
     user-select: none;
     -webkit-user-select: none;
     -webkit-user-drag: none; }
-    .rp-wrapper .rp-resizer:hover {
+    .rp-main .rp-resizer:hover {
       background-color: rgba(0, 0, 0, 0.3); }
-  .rp-wrapper .rp-group-wrapper, .rp-wrapper .rp-group-list {
-    position: relative;
-    overflow: hidden;
-    user-select: none;
-    cursor: default; }
-    .rp-wrapper .rp-group-wrapper a, .rp-wrapper .rp-group-list a {
-      cursor: pointer; }
-    .rp-wrapper .rp-group-wrapper h3, .rp-wrapper .rp-group-list h3 {
-      margin: 15px 0 0 0;
-      font-weight: bold;
-      color: #555555; }
-    .rp-wrapper .rp-group-wrapper span, .rp-wrapper .rp-group-wrapper h3, .rp-wrapper .rp-group-wrapper .rp-resource-name, .rp-wrapper .rp-group-wrapper .rp-resource-description, .rp-wrapper .rp-group-list span, .rp-wrapper .rp-group-list h3, .rp-wrapper .rp-group-list .rp-resource-name, .rp-wrapper .rp-group-list .rp-resource-description {
-      overflow: hidden;
-      text-overflow: ellipsis; }
-    .rp-wrapper .rp-group-wrapper .rp-group-left, .rp-wrapper .rp-group-list .rp-group-left {
-      width: 20%;
-      background: #FFFFFF;
+  .rp-main .rp-row {
+    display: flex;
+    border-bottom: 1px solid #d7d7d7;
+    padding: 10px; }
+    .rp-main .rp-row > .rp-label-subtitle:not(:first-child) {
+      border-left: 1px solid #d7d7d7; }
+    .rp-main .rp-row.rp-row-center {
+      text-align: center; }
+    .rp-main .rp-row.rp-row-label {
+      padding: 0; }
+      .rp-main .rp-row.rp-row-label > * {
+        padding: 10px; }
+      .rp-main .rp-row.rp-row-label.rp-row-center > * {
+        padding: 10px 0; }
+    .rp-main .rp-row > .rp-btn-group {
+      margin: -5px;
+      margin-left: auto; }
+    .rp-main .rp-row > .rp-content-resource {
+      margin-left: -10px;
+      margin-right: -10px;
+      padding-left: 20px; }
+    .rp-main .rp-row > .rp-content-event,
+    .rp-main .rp-row > .rp-content-resource {
+      display: none;
+      margin-top: 10px; }
+      .rp-main .rp-row > .rp-content-event .rp-row:first-child,
+      .rp-main .rp-row > .rp-content-resource .rp-row:first-child {
+        border-top: 1px solid #d7d7d7; }
+    .rp-main .rp-row .rp-group-icon {
+      margin: 17px 0;
+      float: right;
       position: relative;
-      z-index: 1; }
-    .rp-wrapper .rp-group-wrapper .rp-group-right, .rp-wrapper .rp-group-list .rp-group-right {
-      width: 80%;
-      overflow: hidden;
-      box-shadow: #D7D7D7 -1px 0px 0px inset, #D7D7D7 1px 0px 0px inset;
-      transition: 0.5s box-shadow ease; }
-    .rp-wrapper .rp-group-wrapper .rp-row, .rp-wrapper .rp-group-wrapper .rp-scroller, .rp-wrapper .rp-group-list .rp-row, .rp-wrapper .rp-group-list .rp-scroller {
-      display: flex;
-      flex-direction: row;
-      flex-wrap: wrap; }
-    .rp-wrapper .rp-group-wrapper .rp-resource, .rp-wrapper .rp-group-wrapper .rp-label .rp-group-left span, .rp-wrapper .rp-group-list .rp-resource, .rp-wrapper .rp-group-list .rp-label .rp-group-left span {
-      padding-left: 10px; }
-    .rp-wrapper .rp-group-wrapper .rp-heading .rp-label-date, .rp-wrapper .rp-group-wrapper .rp-heading .rp-group-left, .rp-wrapper .rp-group-list .rp-heading .rp-label-date, .rp-wrapper .rp-group-list .rp-heading .rp-group-left {
-      padding-left: 10px;
-      padding-bottom: 15px;
-      box-sizing: border-box;
-      overflow: hidden; }
-    .rp-wrapper .rp-group-wrapper .rp-label, .rp-wrapper .rp-group-list .rp-label {
+      transition: 0.3s all ease;
+      border: 8px solid transparent;
+      border-top: none;
+      border-bottom: 8px solid #5e5e5e;
+      transform: rotate(180deg); }
+    .rp-main .rp-row.rp-show > div > div.rp-group-icon {
+      transform: rotate(0deg); }
+    .rp-main .rp-row.rp-show > .rp-content-resource,
+    .rp-main .rp-row.rp-show > .rp-content-event {
+      display: block; }
+  .rp-main .rp-heading {
+    box-sizing: border-box;
+    overflow: hidden; }
+  .rp-main .rp-label {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis; }
+    .rp-main .rp-label.rp-label-subtitle {
+      font-weight: bold; }
+    .rp-main .rp-label.rp-label-small {
+      font-size: 1em; }
+    .rp-main .rp-label.rp-label-heading {
       font-weight: bold;
-      line-height: 28px;
-      border-bottom: 1px solid #D7D7D7; }
-      .rp-wrapper .rp-group-wrapper .rp-label .rp-label-date, .rp-wrapper .rp-group-list .rp-label .rp-label-date {
-        text-align: center;
-        display: block; }
-      .rp-wrapper .rp-group-wrapper .rp-label .rp-line, .rp-wrapper .rp-group-list .rp-label .rp-line {
+      font-size: 1.75em;
+      margin: 5px 0 0 0;
+      color: #555555; }
+    .rp-main .rp-label.rp-label-today {
+      background: #d7d7d7; }
+  .rp-main .rp-content-event,
+  .rp-main .rp-content-resource {
+    position: relative; }
+    .rp-main .rp-content-event .rp-row,
+    .rp-main .rp-content-resource .rp-row {
+      display: block;
+      box-sizing: content-box; }
+      .rp-main .rp-content-event .rp-row:last-child,
+      .rp-main .rp-content-resource .rp-row:last-child {
+        border-bottom: none;
+        padding-bottom: 0; }
+  .rp-main .rp-wrapper > .rp-content-event > .rp-row:last-child,
+  .rp-main .rp-wrapper > .rp-content-resource > .rp-row:last-child {
+    padding-bottom: 10px; }
+  .rp-main .rp-wrapper > .rp-content-event > .rp-row:first-child {
+    display: flex;
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    color: transparent;
+    z-index: 1;
+    padding: 0;
+    border-bottom: none; }
+  .rp-main .rp-content-event .rp-row {
+    display: block;
+    padding: 10px 0; }
+    .rp-main .rp-content-event .rp-row .rp-datebar {
+      position: absolute;
+      display: flex;
+      padding: 5px;
+      border-radius: 4px;
+      box-shadow: 0px -1px 0 0px inset rgba(55, 55, 55, 0.1);
+      background-color: #067aff;
+      box-sizing: border-box;
+      align-items: center;
+      z-index: 1; }
+      .rp-main .rp-content-event .rp-row .rp-datebar .rp-datebar-label {
         position: absolute;
-        width: 1px;
-        height: 100%;
-        background: #D7D7D7; }
-    .rp-wrapper .rp-group-wrapper .rp-group-list .rp-row, .rp-wrapper .rp-group-list .rp-group-list .rp-row {
-      border-bottom: 1px solid #D7D7D7; }
-      .rp-wrapper .rp-group-wrapper .rp-group-list .rp-row .rp-group-right .rp-scroller, .rp-wrapper .rp-group-list .rp-group-list .rp-row .rp-group-right .rp-scroller {
-        padding: 10px 0;
-        min-height: 32px;
-        position: relative;
-        box-sizing: content-box; }
-        .rp-wrapper .rp-group-wrapper .rp-group-list .rp-row .rp-group-right .rp-scroller .rp-datebar, .rp-wrapper .rp-group-list .rp-group-list .rp-row .rp-group-right .rp-scroller .rp-datebar {
-          display: flex;
-          margin-top: 5px;
-          height: 32px;
-          padding: 5px;
-          border-radius: 4px;
+        padding: 1px 6px;
+        border-radius: 3px;
+        background: rgba(0, 0, 0, 0.3);
+        color: #ffffff;
+        max-width: 100%;
+        flex-shrink: 0;
+        transition: 0.3s all ease;
+        position: sticky;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        z-index: 1;
+        left: calc(30% + 5px); }
+      .rp-main .rp-content-event .rp-row .rp-datebar:hover .rp-datebar-label {
+        background: #000000;
+        max-width: unset;
+        overflow: unset;
+        z-index: 2; }
+      .rp-main .rp-content-event .rp-row .rp-datebar.rp-datebar-nostart {
+        border-radius: 0 4px 4px 0; }
+        .rp-main .rp-content-event .rp-row .rp-datebar.rp-datebar-nostart::after {
+          content: "";
           position: absolute;
-          box-shadow: 0px -1px 0 0px inset rgba(55, 55, 55, 0.1); }
-          .rp-wrapper .rp-group-wrapper .rp-group-list .rp-row .rp-group-right .rp-scroller .rp-datebar .rp-datebar-label, .rp-wrapper .rp-group-list .rp-group-list .rp-row .rp-group-right .rp-scroller .rp-datebar .rp-datebar-label {
-            position: absolute;
-            padding: 1px 6px;
-            border-radius: 3px;
-            overflow: hidden;
-            background: rgba(0, 0, 0, 0.3);
-            color: #FFFFFF;
-            max-width: 100%;
-            white-space: nowrap;
-            text-overflow: ellipsis;
-            flex-shrink: 0;
-            transition: 0.3s all ease; }
-            .rp-wrapper .rp-group-wrapper .rp-group-list .rp-row .rp-group-right .rp-scroller .rp-datebar .rp-datebar-label.rp-date, .rp-wrapper .rp-group-list .rp-group-list .rp-row .rp-group-right .rp-scroller .rp-datebar .rp-datebar-label.rp-date {
-              position: sticky;
-              flex-shrink: 1;
-              left: 5px;
-              opacity: 0;
-              text-overflow: clip; }
-          .rp-wrapper .rp-group-wrapper .rp-group-list .rp-row .rp-group-right .rp-scroller .rp-datebar:hover .rp-datebar-label, .rp-wrapper .rp-group-list .rp-group-list .rp-row .rp-group-right .rp-scroller .rp-datebar:hover .rp-datebar-label {
-            background: rgba(0, 0, 0, 0.6); }
-          .rp-wrapper .rp-group-wrapper .rp-group-list .rp-row .rp-group-right .rp-scroller .rp-datebar:hover .rp-datebar-label.rp-date, .rp-wrapper .rp-group-list .rp-group-list .rp-row .rp-group-right .rp-scroller .rp-datebar:hover .rp-datebar-label.rp-date {
-            z-index: 3;
-            backdrop-filter: blur(3px);
-            opacity: 1;
-            max-width: unset;
-            overflow: unset; }
-      .rp-wrapper .rp-group-wrapper .rp-group-list .rp-row .rp-group-left .rp-resource, .rp-wrapper .rp-group-list .rp-group-list .rp-row .rp-group-left .rp-resource {
-        padding: 7px 10px; }
-      .rp-wrapper .rp-group-wrapper .rp-group-list .rp-row .rp-group-left .rp-resource-name, .rp-wrapper .rp-group-list .rp-group-list .rp-row .rp-group-left .rp-resource-name {
-        font-weight: bold; }
+          right: 100%;
+          height: 30px;
+          width: 30px;
+          transform: translate(50%, 0) rotate(45deg);
+          border-top-color: transparent;
+          border-right-color: transparent;
+          background: inherit; }
+      .rp-main .rp-content-event .rp-row .rp-datebar.rp-datebar-noend {
+        border-radius: 4px 0 0 4px; }
+        .rp-main .rp-content-event .rp-row .rp-datebar.rp-datebar-noend::before {
+          content: "";
+          position: absolute;
+          left: 100%;
+          height: 30px;
+          width: 30px;
+          transform: translate(-50%, 0) rotate(45deg);
+          border-top-color: transparent;
+          border-right-color: transparent;
+          background: inherit; }
+        .rp-main .rp-content-event .rp-row .rp-datebar.rp-datebar-noend.rp-datebar-nostart {
+          border-radius: 0; }
+  .rp-main .rp-content-resource .rp-label {
+    max-width: max-content;
+    max-width: fit-content; }
+  .rp-main .rp-content-resource .rp-row > div {
+    overflow: hidden; }
