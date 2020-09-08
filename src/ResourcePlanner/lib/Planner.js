@@ -499,7 +499,8 @@ define(["require", "exports"], function (require, exports) {
             var loopDate = new Date(this._dateFrom.getTime());
             var today = new Date().flatten();
             for (var i = 0; i < this._daysBetween; i++) {
-                render += "\n      <div class='rp-label rp-label-subtitle " + (loopDate.valueOf() == today.valueOf() ? 'rp-label-today' : '') + "' \n        style='width: " + this._dateWidth + "%; text-align: center;'\n        title='" + loopDate.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) + "'\n      >\n        " + (wText ? loopDate.getDate() : '') + "\n      </div>\n      ";
+                var dayClass = loopDate.valueOf() == today.valueOf() ? 'rp-label-today' : loopDate.getDay() == 6 || loopDate.getDay() == 0 ? 'rp-label-weekend' : '';
+                render += "\n      <div class='rp-label rp-label-subtitle " + dayClass + "' \n        style='width: " + this._dateWidth + "%; text-align: center;'\n        title='" + loopDate.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) + "'\n      >\n        " + (wText ? loopDate.getDate() : '') + "\n      </div>\n      ";
                 loopDate = loopDate.addDays(1);
             }
             return render;
