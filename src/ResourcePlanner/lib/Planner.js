@@ -177,14 +177,14 @@ define(["require", "exports"], function (require, exports) {
             leftNode.insertAdjacentHTML('afterbegin', '<div class=\'rp-group-icon\'></div>');
             leftNode.style['cursor'] = 'pointer';
             leftNode.addEventListener('click', function (e) { return _this.toggle(); });
-            this._resourceRow.setAttribute('title', 'Expand');
+            leftNode.setAttribute('title', 'Expand');
         };
         PlannerGroup.prototype.toggle = function (state) {
             state = state != null ? state : !this._resourceRow.classList.contains('rp-show');
             this._toggled = state;
             this._resourceRow.classList.toggle('rp-show', state);
             this._eventRow.classList.toggle('rp-show', state);
-            this._resourceRow.setAttribute('title', (state ? 'Collapse' : 'Expand'));
+            this._resourceRow.querySelector('div:first-child').setAttribute('title', (state ? 'Collapse' : 'Expand'));
         };
         PlannerGroup.toggleAll = function (groups, state) {
             for (var _i = 0, groups_1 = groups; _i < groups_1.length; _i++) {
@@ -469,6 +469,7 @@ define(["require", "exports"], function (require, exports) {
     }());
     var ResourcePlanner = /** @class */ (function () {
         function ResourcePlanner(node, dateFrom, dateTo, title, description) {
+            this._resourceColumnName = 'Row title';
             // Relationships
             this._resources = new Array;
             this._previousGroups = new Array;
@@ -572,7 +573,7 @@ define(["require", "exports"], function (require, exports) {
             this.dispose();
             this._generateValues();
             // Render initial table
-            this._node.insertAdjacentHTML('afterbegin', "\n    <div class='rp-col rp-resources' style='width: 30%;'>\n      <div class='rp-wrapper'>\n        <div class='rp-sticky'>\n          <div class='rp-row rp-row-spaced'>\n            <div class='rp-heading'>\n              <h3 class='rp-label rp-label-heading' title='" + this._title + "'>" + this._title + "</h3>\n              <div class='rp-label rp-label-small' title='" + this._description + "'>" + this._description + "</div>\n            </div>\n          </div>\n          <div class='rp-row rp-row-spaced'>\n            <div class='rp-label rp-label-subtitle' title='" + ResourcePlanner._resourceColumnName + "'>" + ResourcePlanner._resourceColumnName + ":</div>\n            <div class='rp-btn-group'>\n              <button id='rp-hideAll' class='btn rp-btn' title='Hide all'>Hide all</button>\n              <button id='rp-showAll' class='btn rp-btn' title='Show all'>Show all</button>\n            </div>\n          </div>\n        </div>\n        <div class='rp-content-resource'>\n\n        </div>\n      </div>\n    </div>\n    <div class='rp-col rp-events' style='width: 70%;'>\n      <div class='rp-wrapper' style='width: " + this._scrollWidth + "%'>\n        <div class='rp-sticky'>\n          <div class='rp-row rp-row-spaced rp-row-label'>\n            " + this._generateMonthLabels() + "\n          </div>\n          <div class='rp-row rp-row-center rp-row-label'>\n            " + this._generateDateLabels() + "\n          </div>\n        </div>\n        <div class='rp-content-event'>\n          <div class='rp-row'>\n            " + this._generateDateLabels(false) + "\n          </div>\n        </div>\n      </div>\n    </div>\n    ");
+            this._node.insertAdjacentHTML('afterbegin', "\n    <div class='rp-col rp-resources' style='width: 30%;'>\n      <div class='rp-wrapper'>\n        <div class='rp-sticky'>\n          <div class='rp-row rp-row-spaced'>\n            <div class='rp-heading'>\n              <h3 class='rp-label rp-label-heading' title='" + this._title + "'>" + this._title + "</h3>\n              <div class='rp-label rp-label-small' title='" + this._description + "'>" + this._description + "</div>\n            </div>\n          </div>\n          <div class='rp-row rp-row-spaced'>\n            <div class='rp-label rp-label-subtitle' title='" + this._resourceColumnName + "'>" + (this._resourceColumnHTML ? this._resourceColumnHTML : this._resourceColumnName) + ":</div>\n            <div class='rp-btn-group'>\n              <button id='rp-hideAll' class='btn rp-btn' title='Hide all'>Hide all</button>\n              <button id='rp-showAll' class='btn rp-btn' title='Show all'>Show all</button>\n            </div>\n          </div>\n        </div>\n        <div class='rp-content-resource'>\n\n        </div>\n      </div>\n    </div>\n    <div class='rp-col rp-events' style='width: 70%;'>\n      <div class='rp-wrapper' style='width: " + this._scrollWidth + "%'>\n        <div class='rp-sticky'>\n          <div class='rp-row rp-row-spaced rp-row-label'>\n            " + this._generateMonthLabels() + "\n          </div>\n          <div class='rp-row rp-row-center rp-row-label'>\n            " + this._generateDateLabels() + "\n          </div>\n        </div>\n        <div class='rp-content-event'>\n          <div class='rp-row'>\n            " + this._generateDateLabels(false) + "\n          </div>\n        </div>\n      </div>\n    </div>\n    ");
             this._controlNode.insertAdjacentHTML('beforeend', "\n    <div class='rp-btn-group'>\n      <button id='rp-zoomout' class='btn rp-btn' title='Zoom out'>-</button>\n      <button id='rp-reset' class='btn rp-btn' title='Reset'>" + this.scrollWidth + "%</button>\n      <button id='rp-zoomin' class='btn rp-btn' title='Zoom in'>+</button>\n    </div>\n    ");
             // Set properties
             this._eventColumn = this._node.querySelector('.rp-content-event');
@@ -688,6 +689,18 @@ define(["require", "exports"], function (require, exports) {
             enumerable: true,
             configurable: true
         });
+        Object.defineProperty(ResourcePlanner.prototype, "resourceColumnName", {
+            get: function () { return this._resourceColumnName; },
+            set: function (name) { this._resourceColumnName = name ? name : this._resourceColumnName; },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(ResourcePlanner.prototype, "resourceColumnHTML", {
+            get: function () { return this._resourceColumnHTML; },
+            set: function (HTML) { this._resourceColumnHTML = HTML ? HTML : this._resourceColumnHTML; },
+            enumerable: true,
+            configurable: true
+        });
         ResourcePlanner.prototype.setDates = function (startDate, endDate) {
             var newStartDate = startDate.flatten();
             var newEndDate = endDate.flatten();
@@ -699,12 +712,6 @@ define(["require", "exports"], function (require, exports) {
             else
                 return false;
         };
-        Object.defineProperty(ResourcePlanner.prototype, "resourceColumnName", {
-            set: function (name) { ResourcePlanner._resourceColumnName = name ? name : ResourcePlanner._resourceColumnName; },
-            enumerable: true,
-            configurable: true
-        });
-        ResourcePlanner._resourceColumnName = 'Row title';
         return ResourcePlanner;
     }());
     exports.ResourcePlanner = ResourcePlanner;

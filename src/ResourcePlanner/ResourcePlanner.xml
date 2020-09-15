@@ -21,6 +21,11 @@
       <category>Planner</category>
       <description>String: Resource column identifier</description>
     </property>
+    <property key="resource_column_HTML" type="string" required="false">
+      <caption>Planner column HTML</caption>
+      <category>Planner</category>
+      <description>String: Resource column identifier HTML</description>
+    </property>
     <!-- Search -->
     <property key="search_dateFrom" type="attribute" required="true">
       <caption>Search from date</caption>

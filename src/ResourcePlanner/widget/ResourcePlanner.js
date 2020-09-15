@@ -694,6 +694,9 @@ define([
         this.planner.resourceColumnName = this.resource_column_title
           ? this.resource_column_title
           : "Data";
+        this.planner.resourceColumnHTML = this.resource_column_HTML
+          ? this.resource_column_HTML
+          : this.planner.resourceColumnName;
         this.planner.render();
         // Render inital table
         var pid = mx.ui.showProgress();
