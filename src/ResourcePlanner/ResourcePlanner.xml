@@ -135,10 +135,24 @@
         <attributeType name="Enum" />
       </attributeTypes>
     </property>
+    <property key="resource_description_default" type="string" required="false">
+      <caption>Resource description default</caption>
+      <category>Resource</category>
+      <description>String: Resource row description default</description>
+    </property>
     <property key="resource_uniqueName" type="boolean" required="true" defaultValue="true">
       <caption>Resource unique name identifier</caption>
       <category>Resource</category>
       <description>Boolean: If yes, then the resource will only hold items related to the object. If no, then the resource will hold items with the same named resource</description>
+    </property>
+    <property key="resource_colour" type="attribute" isPath="optional" pathType="reference" entityProperty="event" required="false">
+      <caption>Resource row colour</caption>
+      <category>Resource</category>
+      <description>Attribute: CSS colour (eg: '#DB3E3E', 'rgb(219, 62, 62)')</description>
+      <attributeTypes>
+        <attributeType name="String" />
+        <attributeType name="Enum" />
+      </attributeTypes>
     </property>
     <property key="resource_form" type="form" required="false">
       <caption>Resource page</caption>
@@ -187,10 +201,81 @@
         </property>
       </properties>
     </property>
-    <property key="resource_startButton" type="string" required="true" defaultValue="Start resource">
-      <caption>Start button text</caption>
+    <property key="resource_buttons" type="object" isList="true" required="false">
+      <caption>Buttons</caption>
       <category>Resource</category>
-      <description>String: Text for empty event start button</description>
+      <description>List: Resource action buttons</description>
+      <properties>
+        <property key="action_name" type="string" required="true">
+          <caption>Name</caption>
+          <category>Properties</category>
+          <description>String: Text to be displayed on the button</description>
+        </property>
+        <property key="action_classes" type="string" required="false">
+          <caption>Button class</caption>
+          <category>Properties</category>
+          <description>String: CSS classes applied to the button, put spaces between multiple classes (eg: 'btn btn-primary')</description>
+        </property>
+        <property key="icon_classes" type="string" required="false">
+          <caption>Icon class</caption>
+          <category>Properties</category>
+          <description>String: CSS classes applied to the button icon, put spaces between multiple classes (eg: 'glyphicon glyphicon-plane')</description>
+        </property>
+        <property key="action_type" type="enumeration" defaultValue="microflow">
+          <caption>Action type</caption>
+          <category>Properties</category>
+          <description>Enum: Action type</description>
+          <enumerationValues>
+            <enumerationValue key="microflow">Microflow</enumerationValue>
+            <enumerationValue key="page">Show page</enumerationValue>
+          </enumerationValues>
+        </property>
+        <property key="action_microflow" type="microflow" entityProperty="../event" required="false">
+          <caption>Microflow</caption>
+          <category>Properties</category>
+          <description>Microflow: Call this microflow when button is pressed</description>
+          <returnType type="Void" />
+        </property>
+        <property key="action_form" type="form" required="false">
+          <caption>Page</caption>
+          <category>Properties</category>
+          <description>Page: Show this page when button is pressed</description>
+        </property>
+        <property key="action_form_location" type="enumeration" defaultValue="content">
+          <caption>Page type</caption>
+          <category>Properties</category>
+          <description>Enumeration: How the page is displayed</description>
+          <enumerationValues>
+            <enumerationValue key="content">Content</enumerationValue>
+            <enumerationValue key="popup">Popup</enumerationValue>
+            <enumerationValue key="modal">Modal</enumerationValue>
+          </enumerationValues>
+        </property>
+        <property key="text_visibility" type="boolean" defaultValue="false">
+          <caption>Hide button text</caption>
+          <category>Properties</category>
+          <description>Boolean: Hide button text just displaying an icon</description>
+        </property>
+        <property key="visibility" type="enumeration" defaultValue="always">
+          <caption>Visibility</caption>
+          <category>Properties</category>
+          <description>Enumeration: When is the button visible</description>
+          <enumerationValues>
+            <enumerationValue key="always">Always</enumerationValue>
+            <enumerationValue key="empty">No events</enumerationValue>
+            <enumerationValue key="one">More than one event</enumerationValue>
+            <enumerationValue key="attribute">Attribute</enumerationValue>
+          </enumerationValues>
+        </property>
+        <property key="visibility_bool" type="attribute" isPath="optional" pathType="reference" entityProperty="../event" required="false">
+          <caption>Visibility attribute</caption>
+          <category>Properties</category>
+          <description>Attribute: Boolean attribute for visibility</description>
+          <attributeTypes>
+            <attributeType name="Boolean" />
+          </attributeTypes>
+        </property>
+      </properties>
     </property>
     <!-- Group -->
     <property key="groups" type="object" isList="true" required="false">
@@ -217,10 +302,24 @@
             <attributeType name="Enum" />
           </attributeTypes>
         </property>
+        <property key="group_description_default" type="string" required="false">
+          <caption>Group description default</caption>
+          <category>Resource</category>
+          <description>String: Default description for the planner group</description>
+        </property>
         <property key="group_uniqueName" type="boolean" required="true" defaultValue="true">
           <caption>Group unique name identifier</caption>
           <category>Resource</category>
           <description>Boolean: If yes, then the resource will only hold items related to the object. If no, then the resource will hold items with the same named resource</description>
+        </property>
+        <property key="group_resource_colour" type="attribute" isPath="optional" pathType="reference" entityProperty="../event" required="false">
+          <caption>Group row colour</caption>
+          <category>Resource</category>
+          <description>Attribute: CSS colour (eg: '#DB3E3E', 'rgb(219, 62, 62)')</description>
+          <attributeTypes>
+            <attributeType name="String" />
+            <attributeType name="Enum" />
+          </attributeTypes>
         </property>
         <property key="group_resource_form" type="form" required="false">
           <caption>Group resource page</caption>
@@ -241,11 +340,6 @@
           <caption>Group name icon</caption>
           <category>Resource</category>
           <description>String: Glyphicon displayed next to the group name (eg: 'user' will result glyphicon-user)</description>
-        </property>
-        <property key="group_startButton" type="string" required="true" defaultValue="Start resource">
-          <caption>Start button text</caption>
-          <category>Resource</category>
-          <description>String: Text for empty event start button</description>
         </property>
         <!-- Group event -->
         <property key="group_generateDate" type="boolean" required="true" defaultValue="true">
@@ -306,6 +400,87 @@
             <enumerationValue key="popup">Popup</enumerationValue>
             <enumerationValue key="modal">Modal</enumerationValue>
           </enumerationValues>
+        </property>
+      </properties>
+    </property>
+    <property key="group_buttons" type="object" isList="true" required="false">
+      <caption>Group buttons</caption>
+      <category>Group</category>
+      <description>List: Group specific action buttons</description>
+      <properties>
+        <property key="action_index" type="integer" defaultValue="0" required="true">
+          <caption>Index</caption>
+          <category>Properties</category>
+          <description>Integer: Group index in the list (0 = first item in group list)</description>
+        </property>
+        <property key="action_name" type="string" required="true">
+          <caption>Name</caption>
+          <category>Properties</category>
+          <description>String: Text to be displayed on the button</description>
+        </property>
+        <property key="action_classes" type="string" required="false">
+          <caption>Button class</caption>
+          <category>Properties</category>
+          <description>String: CSS classes applied to the button, put spaces between multiple classes (eg: 'btn btn-primary')</description>
+        </property>
+        <property key="icon_classes" type="string" required="false">
+          <caption>Icon class</caption>
+          <category>Properties</category>
+          <description>String: CSS classes applied to the button icon, put spaces between multiple classes (eg: 'glyphicon glyphicon-plane')</description>
+        </property>
+        <property key="action_type" type="enumeration" defaultValue="microflow">
+          <caption>Action type</caption>
+          <category>Properties</category>
+          <description>Enum: Action type</description>
+          <enumerationValues>
+            <enumerationValue key="microflow">Microflow</enumerationValue>
+            <enumerationValue key="page">Show page</enumerationValue>
+          </enumerationValues>
+        </property>
+        <property key="action_microflow" type="microflow" entityProperty="../event" required="false">
+          <caption>Microflow</caption>
+          <category>Properties</category>
+          <description>Microflow: Call this microflow when button is pressed</description>
+          <returnType type="Void" />
+        </property>
+        <property key="action_form" type="form" required="false">
+          <caption>Page</caption>
+          <category>Properties</category>
+          <description>Page: Show this page when button is pressed</description>
+        </property>
+        <property key="action_form_location" type="enumeration" defaultValue="content">
+          <caption>Page type</caption>
+          <category>Properties</category>
+          <description>Enumeration: How the page is displayed</description>
+          <enumerationValues>
+            <enumerationValue key="content">Content</enumerationValue>
+            <enumerationValue key="popup">Popup</enumerationValue>
+            <enumerationValue key="modal">Modal</enumerationValue>
+          </enumerationValues>
+        </property>
+        <property key="text_visibility" type="boolean" defaultValue="false">
+          <caption>Hide button text</caption>
+          <category>Properties</category>
+          <description>Boolean: Hide button text just displaying an icon</description>
+        </property>
+        <property key="visibility" type="enumeration" defaultValue="always">
+          <caption>Visibility</caption>
+          <category>Properties</category>
+          <description>Enumeration: When is the button visible</description>
+          <enumerationValues>
+            <enumerationValue key="always">Always</enumerationValue>
+            <enumerationValue key="empty">No events</enumerationValue>
+            <enumerationValue key="one">More than one event</enumerationValue>
+            <enumerationValue key="attribute">Attribute</enumerationValue>
+          </enumerationValues>
+        </property>
+        <property key="visibility_bool" type="attribute" isPath="optional" pathType="reference" entityProperty="../event" required="false">
+          <caption>Visibility attribute</caption>
+          <category>Properties</category>
+          <description>Attribute: Boolean attribute for visibility</description>
+          <attributeTypes>
+            <attributeType name="Boolean" />
+          </attributeTypes>
         </property>
       </properties>
     </property>

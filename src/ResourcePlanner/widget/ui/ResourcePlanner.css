@@ -98,6 +98,7 @@
         border-top: 1px solid #d7d7d7; }
     .rp-main .rp-row .rp-group-icon {
       margin: 17px 0;
+      margin-left: 10px;
       float: right;
       position: relative;
       transition: 0.3s all ease;
@@ -118,7 +119,8 @@
     white-space: nowrap;
     text-overflow: ellipsis; }
     .rp-main .rp-label.rp-label-subtitle {
-      font-weight: bold; }
+      font-weight: bold;
+      box-sizing: border-box; }
     .rp-main .rp-label.rp-label-small {
       font-size: 1em; }
     .rp-main .rp-label.rp-label-heading {
@@ -137,10 +139,6 @@
     .rp-main .rp-content-resource .rp-row {
       display: block;
       box-sizing: content-box; }
-      .rp-main .rp-content-event .rp-row:last-child,
-      .rp-main .rp-content-resource .rp-row:last-child {
-        border-bottom: none;
-        padding-bottom: 0; }
   .rp-main .rp-wrapper > .rp-content-event > .rp-row:last-child,
   .rp-main .rp-wrapper > .rp-content-resource > .rp-row:last-child {
     padding-bottom: 10px; }
@@ -173,7 +171,6 @@
         background: rgba(0, 0, 0, 0.3);
         color: #ffffff;
         max-width: 100%;
-        flex-shrink: 0;
         transition: 0.3s all ease;
         position: sticky;
         overflow: hidden;
@@ -217,3 +214,10 @@
     max-width: fit-content; }
   .rp-main .rp-content-resource .rp-row > div {
     overflow: hidden; }
+  .rp-main .rp-content-resource .rp-controls {
+    float: right;
+    height: 100%;
+    display: flex; }
+  .rp-main .rp-row.rp-show {
+    padding-bottom: 0 !important;
+    border-bottom: 0 !important; }

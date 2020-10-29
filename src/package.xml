@@ -8,6 +8,7 @@
     </widgetFiles>
     <files>
       <file path="ResourcePlanner/widget/" />
+      <file path="ResourcePlanner/lib/" />
     </files>
   </clientModule>
 </package>
