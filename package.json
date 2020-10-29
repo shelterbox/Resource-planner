@@ -33,10 +33,10 @@
   },
   "scripts": {
     "buildWidget": "grunt build",
-    "buildLib": "npm run build --prefix ./../ResourcePlannerStandalone",
-    "copyCSS": "cp ./../ResourcePlannerStandalone/dist/css/ResourcePlanner.css ./src/ResourcePlanner/widget/ui/ResourcePlanner.css",
-    "copyJS": "cp ./../ResourcePlannerStandalone/dist/js/Planner.js ./src/ResourcePlanner/lib/Planner.js",
-    "copyMap": "cp ./../ResourcePlannerStandalone/dist/js/Planner.js.map ./src/ResourcePlanner/lib/Planner.js.map",
+    "buildLib": "npm run build --prefix ./../ResourcePlanner",
+    "copyCSS": "cp ./../ResourcePlanner/dist/css/ResourcePlanner.css ./src/ResourcePlanner/widget/ui/ResourcePlanner.css",
+    "copyJS": "cp ./../ResourcePlanner/dist/js/Planner.js ./src/ResourcePlanner/lib/Planner.js",
+    "copyMap": "cp ./../ResourcePlanner/dist/js/Planner.js.map ./src/ResourcePlanner/lib/Planner.js.map",
     "build": "run-s buildLib copyCSS copyJS copyMap buildWidget"
   }
 }
