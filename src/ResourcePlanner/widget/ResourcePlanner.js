@@ -55,11 +55,11 @@ define([
     planner: null,
     subscribed: new Array(),
 
-    _dataGet: function(guid) {
-      return new Promise(function(resolve, reject) {
-        mx.data.get({ 
-          guid: guid, 
-          callback: function(data) {
+    _dataGet: function (guid) {
+      return new Promise(function (resolve, reject) {
+        mx.data.get({
+          guid: guid,
+          callback: function (data) {
             resolve(data);
           }
         });
@@ -165,16 +165,16 @@ define([
         );
         resource.description = fetchResoure_description.string ? fetchResoure_description.string : context.resource_description_default;
         // Resource colour
-        var fetchResoure_colour = await context._fetchString(mxObject_event, context.resource_colour);
-        resource.rowColour = fetchResoure_colour.string;
-        
+        var fetchResource_colour = await context._fetchString(mxObject_event, context.resource_colour);
+        resource.rowColour = fetchResource_colour.string;
+
         // Subscribe resource changes
         if (resource.object && !context.subscribed.find((obj) => obj.id == resource.object.getGuid())) {
           var subscription = {
             id: resource.object.getGuid(),
             subscription: mx.data.subscribe({
               guid: resource.object.getGuid(),
-              callback: async function(guid) {
+              callback: async function (guid) {
                 var resourceExists = await context._dataGet(guid);
                 var resourceRow = context.planner.allResources().filter(row => row.id == resource.object.getGuid())[0];
                 // Resource exists, keep it
@@ -237,7 +237,7 @@ define([
               id: grouping.object.getGuid(),
               subscription: mx.data.subscribe({
                 guid: grouping.object.getGuid(),
-                callback: async function(guid) {
+                callback: async function (guid) {
                   var groupExists = await context._dataGet(guid);
                   var groupRow = ResourcePlanner.allGroups(context.planner).filter(row => row.id == grouping.object.getGuid())[0];
                   // Group exists, keep it
@@ -276,7 +276,7 @@ define([
             id: event.object.getGuid(),
             subscription: mx.data.subscribe({
               guid: event.object.getGuid(),
-              callback: async function(guid) {
+              callback: async function (guid) {
                 var eventExists = await context._dataGet(guid);
                 // Data exists, re-render event
                 if (eventExists) {
@@ -346,26 +346,28 @@ define([
             }
             // Add group buttons
             if (context.group_buttons) {
-              for (const btn of objContext.buttons) {
+              for (var btn of objContext.buttons) {
                 objContext.removeButton(btn.id);
               }
               let btnIndex = 0;
               let action = null;
-              for (const config of context.group_buttons) {
-                if (config.action_index == index) {
-                  // Setup action
-                  if (config.action_type === "microflow") action = function(button) {
-                    context._execMf(config.action_microflow, group.object.getGuid(), async function(mfObjects) {
-                      if (mfObjects) {
-                        var data = await context.fetchData(mfObjects[0]);
-                        context.renderData(data);
-                      }
-                    })
-                  }
-                  else if (config.action_type === "page") action = function(button) {
-                    context._showPage(context._splitPath(group.name).path.split("/").pop(), group.object.getGuid(), config.action_form, config.action_form_location);
-                  }
-                  if (config.visibility === "always" || (config.visibility === "empty" && !(objContext.groupEvent.startDate || objContext.groupEvent.endDate)) || (config.visibility === "one" && (objContext.groupEvent.startDate || objContext.groupEvent.endDate))) {
+              for (var conf of context.group_buttons) {
+                (function (config) {
+                  // Check button is for the group (by index)
+                  if (config.action_index == index) {
+                    // Setup microflow action
+                    if (config.action_type === "microflow") action = function (button) {
+                      context._execMf(config.action_microflow, group.object.getGuid(), async function (mfObjects) {
+                        if (mfObjects) {
+                          var data = await context.fetchData(mfObjects[0]);
+                          context.renderData(data);
+                        }
+                      })
+                    }
+                    // Setup page action
+                    else if (config.action_type === "page") action = function (button) {
+                      context._showPage(context._splitPath(group.name).path.split("/").pop(), group.object.getGuid(), config.action_form, config.action_form_location);
+                    }
                     // Add button
                     objContext.addButton({
                       id: btnIndex,
@@ -375,27 +377,22 @@ define([
                       onClick: action,
                       hideText: config.text_visibility
                     });
-                  }
-                  else if (config.visibility === "attribute") {
-                    if (config.visibility_bool) {
-                      context._fetchString(event.object, config.visibility_bool)
-                        .then(data => {
-                          if (data.string) {
-                            // Add button
-                            objContext.addButton({
-                              id: btnIndex,
-                              name: config.action_name,
-                              class: config.action_classes ? config.action_classes.split(' ') : null,
-                              iconClass: config.icon_classes ? config.icon_classes.split(' ') : null,
-                              onClick: action,
-                              hideText: config.text_visibility
-                            });
-                          }
-                        });
+                    // Decide if to remove button
+                    if ((config.visibility === "empty" && (objContext.groupEvent.startDate || objContext.groupEvent.endDate)) || (config.visibility === "one" && !(objContext.groupEvent.startDate || objContext.groupEvent.endDate))) {
+                      objContext.removeButton(btnIndex);
                     }
+                    else if (config.visibility === "attribute") {
+                      if (config.visibility_bool) {
+                        let tempBtnIndex = btnIndex;
+                        context._fetchString(event.object, config.visibility_bool)
+                          .then(data => {
+                            if (!data.string) objContext.removeButton(tempBtnIndex);
+                          });
+                      }
+                    }
+                    btnIndex++;
                   }
-                  btnIndex++;
-                }
+                })(conf);
               }
             }
           }
@@ -462,25 +459,26 @@ define([
 
         // Add resource buttons
         if (context.resource_buttons) {
-          for (const btn of resourceObj.buttons) {
+          for (var btn of resourceObj.buttons) {
             resourceObj.removeButton(btn.id);
           }
           let btnIndex = 0;
           let action = null;
-          for (const config of context.resource_buttons) {
-            // Setup action
-            if (config.action_type === "microflow") action = function(button) {
-              context._execMf(config.action_microflow, resource.object.getGuid(), async function(mfObjects) {
-                if (mfObjects) {
-                  var data = await context.fetchData(mfObjects[0]);
-                  context.renderData(data);
-                }
-              })
-            }
-            else if (config.action_type === "page") action = function(button) {
-              context._showPage(context._splitPath(context.resource_name).path.split("/").pop(), resource.object.getGuid(), config.action_form, config.action_form_location);
-            }
-            if (config.visibility === "always" || (config.visibility === "empty" && resourceObj.events.filter(event => event.startDate || event.endDate).length == 0) || (config.visibility === "one" && resourceObj.events.filter(event => event.startDate || event.endDate).length > 0)) {
+          for (var conf of context.resource_buttons) {
+            (function (config) {
+              // Setup microflow action
+              if (config.action_type === "microflow") action = function (button) {
+                context._execMf(config.action_microflow, resource.object.getGuid(), async function (mfObjects) {
+                  if (mfObjects) {
+                    var data = await context.fetchData(mfObjects[0]);
+                    context.renderData(data);
+                  }
+                })
+              }
+              // Setup page action
+              else if (config.action_type === "page") action = function (button) {
+                context._showPage(context._splitPath(context.resource_name).path.split("/").pop(), resource.object.getGuid(), config.action_form, config.action_form_location);
+              }
               // Add button
               resourceObj.addButton({
                 id: btnIndex,
@@ -490,26 +488,20 @@ define([
                 onClick: action,
                 hideText: config.text_visibility
               });
-            }
-            else if (config.visibility === "attribute") {
-              if (config.visibility_bool) {
-                context._fetchString(event.object, config.visibility_bool)
-                  .then(data => {
-                    if (data.string) {
-                      // Add button
-                      resourceObj.addButton({
-                        id: btnIndex,
-                        name: config.action_name,
-                        class: config.action_classes ? config.action_classes.split(' ') : null,
-                        iconClass: config.icon_classes ? config.icon_classes.split(' ') : null,
-                        onClick: action,
-                        hideText: config.text_visibility
-                      });
-                    }
-                  });
+              if ((config.visibility === "empty" && resourceObj.events.filter(event => event.startDate || event.endDate).length != 0) || (config.visibility === "one" && resourceObj.events.filter(event => event.startDate || event.endDate).length == 0)) {
+                resourceObj.removeButton(btnIndex);
               }
-            }
-            btnIndex++;
+              else if (config.visibility === "attribute") {
+                if (config.visibility_bool) {
+                  let tempBtnIndex = btnIndex;
+                  context._fetchString(event.object, config.visibility_bool)
+                    .then(data => {
+                      if (!data.string) resourceObj.removeButton(tempBtnIndex);
+                    });
+                }
+              }
+              btnIndex++;
+            })(conf);
           }
         }
 
@@ -522,7 +514,7 @@ define([
           nameNode.innerText = node.innerText;
           node.innerText = null;
           node.removeAttribute("id");
-          iconNode.classList.add("glyphicon","spacing-outer-right","glyphicon-" + context.resource_icon);
+          iconNode.classList.add("glyphicon", "spacing-outer-right", "glyphicon-" + context.resource_icon);
           node.insertAdjacentElement("afterbegin", iconNode);
           node.insertAdjacentElement("beforeend", nameNode);
           resourceObj.resourceRow.setAttribute("data-icon", "true");
@@ -728,6 +720,12 @@ define([
 
     uninitialize: function () {
       logger.debug(this.id + ".uninitialize");
+      if (this.subscribed instanceof Array) {
+        // Remove existing subscriptions
+        this.subscribed.forEach((sub) =>
+          mx.data.unsubscribe(sub.subscription)
+        );
+      }
     },
 
     _showErrorMessage: function (message) {
