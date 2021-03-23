@@ -116,7 +116,7 @@ define(["require", "exports"], function (require, exports) {
         PlannerResource.prototype._renderResource = function () {
             this._resourceRow = document.createElement('div');
             this._resourceRow.classList.add('rp-row', 'rp-row-spaced');
-            this._resourceRow.innerHTML = "\n            <div>\n                <div class='rp-controls'></div>\n                <div id='name' class='rp-label rp-label-subtitle'></div>\n                <div id='description' class='rp-label'></div>\n            </div>\n            ";
+            this._resourceRow.innerHTML = "\n    <div>\n        <div class='rp-controls'></div>\n        <div id='name' class='rp-label rp-label-subtitle'></div>\n        <div id='description' class='rp-label'></div>\n    </div>\n    ";
             this._buttonGroup = this._resourceRow.querySelector('div.rp-controls');
             this._eventRow = document.createElement('div');
             this._eventRow.classList.add('rp-row');
@@ -237,6 +237,37 @@ define(["require", "exports"], function (require, exports) {
             enumerable: true,
             configurable: true
         });
+        Object.defineProperty(PlannerResource.prototype, "height", {
+            get: function () { return this._height; },
+            set: function (height) {
+                height = height >= PlannerEvent.height ? height : PlannerEvent.height;
+                this._height = height;
+                var leftNode = this._resourceRow.querySelector('div:first-child');
+                var rightNode = this._eventRow.querySelector('div:first-child');
+                leftNode.style['height'] = this._height + "px";
+                rightNode.style['height'] = this._height + "px";
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(PlannerResource.prototype, "order", {
+            get: function () { return Array.prototype.indexOf.call(this._resourceRow.parentElement.children, this._resourceRow); },
+            set: function (index) {
+                var pos = index + 1;
+                var refResource = this.parent.resources()[index];
+                var refResourceRow = refResource ? refResource.resourceRow : null;
+                var refEventRow = refResource ? refResource.eventRow : null;
+                if (this.parent.resources().length === pos) {
+                    refResourceRow = null;
+                    refEventRow = null;
+                }
+                this.resourceRow.parentNode.insertBefore(this.resourceRow, refResourceRow);
+                this.eventRow.parentNode.insertBefore(this.eventRow, refEventRow);
+                this.parent.reorder();
+            },
+            enumerable: true,
+            configurable: true
+        });
         Object.defineProperty(PlannerResource.prototype, "events", {
             get: function () { return this._events; },
             enumerable: true,
@@ -254,18 +285,6 @@ define(["require", "exports"], function (require, exports) {
         });
         Object.defineProperty(PlannerResource.prototype, "buttons", {
             get: function () { return this._buttons; },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(PlannerResource.prototype, "height", {
-            set: function (height) {
-                height = height >= PlannerEvent.height ? height : PlannerEvent.height;
-                this._height = height;
-                var leftNode = this._resourceRow.querySelector('div:first-child');
-                var rightNode = this._eventRow.querySelector('div:first-child');
-                leftNode.style['height'] = this._height + "px";
-                rightNode.style['height'] = this._height + "px";
-            },
             enumerable: true,
             configurable: true
         });
@@ -387,6 +406,9 @@ define(["require", "exports"], function (require, exports) {
                 this._resources = this._resources.filter(function (obj) { return obj.id != id && obj instanceof PlannerGroup; });
             }
         };
+        PlannerGroup.prototype.reorder = function () {
+            this._resources = this._resources.sort(function (a, b) { return a.order - b.order; });
+        };
         Object.defineProperty(PlannerGroup.prototype, "toggled", {
             get: function () { return this._toggled; },
             enumerable: true,
@@ -441,21 +463,41 @@ define(["require", "exports"], function (require, exports) {
             this._node.style['height'] = PlannerEvent.height + "px";
             this._node.innerHTML = "\n            <div id='title' class='rp-datebar-label'></div>\n        ";
         };
-        PlannerEvent.prototype._generateWidth = function (Planner, startDate, endDate) {
+        PlannerEvent.prototype.render = function () {
+            if ((this._resource.planner.dateFrom.valueOf() > this.visualEndDate.valueOf() && this._resource.planner.dateFrom.valueOf() > this.visualStartDate.valueOf()) ||
+                (this._resource.planner.dateTo.valueOf() < this.visualStartDate.valueOf() && this._resource.planner.dateTo.valueOf() < this.visualEndDate.valueOf()) ||
+                (this.visualStartDate.valueOf() > this.visualEndDate.valueOf())) {
+                this._node.style['display'] = 'none';
+            }
+            else {
+                this._node.style['display'] = 'flex';
+                var node = this._node.querySelector('#title');
+                node.innerText = this.title;
+                this._node.setAttribute('title', this.title);
+                this._node.style['marginLeft'] = this._generateMargin();
+                this._node.style['width'] = this._generateWidth();
+                this._node.classList.remove('rp-datebar-nostart', 'rp-datebar-noend');
+                if (!this._startDate)
+                    this._node.classList.add('rp-datebar-nostart');
+                if (!this._endDate)
+                    this._node.classList.add('rp-datebar-noend');
+            }
+        };
+        PlannerEvent.prototype._generateWidth = function () {
             // If event sits between 'From' query
-            if (startDate <= Planner.dateFrom && (endDate >= Planner.dateFrom && endDate <= Planner.dateTo))
-                return ((Planner.dateFrom.daysBetween(endDate) + 1) / Planner.daysBetween * 100) + '%';
+            if (this.visualStartDate <= this._resource.planner.dateFrom && (this.visualEndDate >= this._resource.planner.dateFrom && this.visualEndDate <= this._resource.planner.dateTo))
+                return ((this._resource.planner.dateFrom.daysBetween(this.visualEndDate) + 1) / this._resource.planner.daysBetween * 100) + '%';
             // If event sits between 'To' query
-            else if ((startDate <= Planner.dateTo && startDate >= Planner.dateFrom) && endDate >= Planner.dateTo)
-                return ((startDate.daysBetween(Planner.dateTo) + 1) / Planner.daysBetween * 100) + '%';
+            else if ((this.visualStartDate <= this._resource.planner.dateTo && this.visualStartDate >= this._resource.planner.dateFrom) && this.visualEndDate >= this._resource.planner.dateTo)
+                return ((this.visualStartDate.daysBetween(this._resource.planner.dateTo) + 1) / this._resource.planner.daysBetween * 100) + '%';
             // If event sits over the query
-            else if (startDate <= Planner.dateFrom && endDate >= Planner.dateTo)
+            else if (this.visualStartDate <= this._resource.planner.dateFrom && this.visualEndDate >= this._resource.planner.dateTo)
                 return '100%';
             // Standard return
-            return ((startDate.daysBetween(endDate) + 1) / Planner.daysBetween * 100) + '%';
+            return ((this.visualStartDate.daysBetween(this.visualEndDate) + 1) / this._resource.planner.daysBetween * 100) + '%';
         };
-        PlannerEvent.prototype._generateMargin = function (Planner) {
-            return this.visualStartDate > Planner.dateFrom ? (Planner.dateFrom.daysBetween(this.visualStartDate) / Planner.daysBetween * 100) + '%' : '0%';
+        PlannerEvent.prototype._generateMargin = function () {
+            return this.visualStartDate > this._resource.planner.dateFrom ? (this._resource.planner.dateFrom.daysBetween(this.visualStartDate) / this._resource.planner.daysBetween * 100) + '%' : '0%';
         };
         Object.defineProperty(PlannerEvent.prototype, "id", {
             get: function () { return this._id; },
@@ -556,24 +598,7 @@ define(["require", "exports"], function (require, exports) {
                 var endDate = (this._endDate ? this._endDate : (this._startDate ? (this._startDate.valueOf() < today.valueOf() ? today : this._startDate) : null));
                 // HTML node
                 if (startDate && endDate) {
-                    if ((this._resource.planner.dateFrom.valueOf() > this.visualEndDate.valueOf() && this._resource.planner.dateFrom.valueOf() > this.visualStartDate.valueOf()) ||
-                        (this._resource.planner.dateTo.valueOf() < this.visualStartDate.valueOf() && this._resource.planner.dateTo.valueOf() < this.visualEndDate.valueOf()) ||
-                        (this.visualStartDate.valueOf() > this.visualEndDate.valueOf())) {
-                        this._node.style['display'] = 'none';
-                    }
-                    else {
-                        this._node.style['display'] = 'flex';
-                        var node = this._node.querySelector('#title');
-                        node.innerText = this.title;
-                        this._node.setAttribute('title', this.title);
-                        this._node.style['marginLeft'] = this._generateMargin(this._resource.planner);
-                        this._node.style['width'] = this._generateWidth(this._resource.planner, startDate, endDate);
-                        this._node.classList.remove('rp-datebar-nostart', 'rp-datebar-noend');
-                        if (!this._startDate)
-                            this._node.classList.add('rp-datebar-nostart');
-                        if (!this._endDate)
-                            this._node.classList.add('rp-datebar-noend');
-                    }
+                    this.render();
                 }
                 else {
                     this._node.style['display'] = 'none';
@@ -719,6 +744,9 @@ define(["require", "exports"], function (require, exports) {
             }
             return list;
         };
+        ResourcePlanner.prototype.reorder = function () {
+            this._resources = this._resources.sort(function (a, b) { return a.order - b.order; });
+        };
         ResourcePlanner.prototype.render = function () {
             var _this = this;
             this.dispose();
@@ -763,11 +791,12 @@ define(["require", "exports"], function (require, exports) {
                 PlannerGroup.toggleAll(ResourcePlanner.allGroups(_this), true);
             });
             // Render column resizer
-            var resizer = document.createElement('div');
-            resizer.classList.add('rp-resizer');
-            this._node.querySelector('div.rp-resources > .rp-wrapper').appendChild(resizer);
+            this._resizerNode = document.createElement('div');
+            this._resizerNode.classList.add('rp-resizer');
+            this._node.querySelector('div.rp-resources > .rp-wrapper').appendChild(this._resizerNode);
             // Define events
             var downEvent = function (e) {
+                _this._node.style['cursor'] = 'col-resize';
                 window.addEventListener('mouseup', upEvent);
                 window.addEventListener('mousemove', dragEvent);
             };
@@ -778,6 +807,7 @@ define(["require", "exports"], function (require, exports) {
                 _this.resourceColumnPercent = percentage;
             };
             var upEvent = function (e) {
+                _this._node.style['cursor'] = null;
                 // Remove event
                 window.removeEventListener('mousemove', dragEvent);
                 // Change sticky points
@@ -787,7 +817,7 @@ define(["require", "exports"], function (require, exports) {
                 });
             };
             // Add event
-            resizer.addEventListener('mousedown', downEvent);
+            this._resizerNode.addEventListener('mousedown', downEvent);
         };
         ResourcePlanner.prototype.dispose = function () {
             this._node.innerHTML = '';
@@ -831,13 +861,38 @@ define(["require", "exports"], function (require, exports) {
         Object.defineProperty(ResourcePlanner.prototype, "resourceColumnPercent", {
             get: function () { return this._resourceColumnPercent; },
             set: function (percentage) {
-                var threshold = 0.2;
+                // Drag limit
+                var threshold = 0.15;
+                var hideThreshold = 0.1;
+                // Nodes effected
+                var leftNode = this._node.querySelector('div.rp-col.rp-resources');
+                var rightNode = this._node.querySelector('div.rp-col.rp-events');
+                // Drag limit logic
                 if (percentage > threshold && percentage < (1 - threshold)) {
                     this._resourceColumnPercent = percentage;
                     var percentageLeft = (percentage) * 100;
                     var percentageRight = 100 - percentageLeft;
-                    var leftNode = this._node.querySelector('div.rp-col.rp-resources');
-                    var rightNode = this._node.querySelector('div.rp-col.rp-events');
+                    this._resizerNode.style['right'] = null;
+                    if (leftNode && rightNode) {
+                        leftNode.style['width'] = percentageLeft + "%";
+                        rightNode.style['width'] = percentageRight + "%";
+                    }
+                }
+                // Drag collapse logic
+                else if (percentage < hideThreshold) {
+                    this._resourceColumnPercent = 0;
+                    this._resizerNode.style['right'] = '-10px';
+                    if (leftNode && rightNode) {
+                        leftNode.style['width'] = '0%';
+                        rightNode.style['width'] = '100%';
+                    }
+                }
+                // Drag open logic
+                else if (percentage > hideThreshold) {
+                    this._resourceColumnPercent = threshold;
+                    var percentageLeft = (threshold) * 100;
+                    var percentageRight = 100 - percentageLeft;
+                    this._resizerNode.style['right'] = null;
                     if (leftNode && rightNode) {
                         leftNode.style['width'] = percentageLeft + "%";
                         rightNode.style['width'] = percentageRight + "%";
