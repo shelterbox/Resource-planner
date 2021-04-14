@@ -153,63 +153,74 @@
     padding: 0;
     border-bottom: none; }
   .rp-main .rp-content-event .rp-row {
+    position: relative;
     display: block;
     padding: 10px 0; }
-    .rp-main .rp-content-event .rp-row .rp-datebar {
+  .rp-main .rp-content-event .rp-datebar {
+    position: absolute;
+    display: flex;
+    padding: 5px;
+    border-radius: 4px;
+    box-shadow: 0px -1px 0 0px inset rgba(55, 55, 55, 0.1);
+    background-color: #067aff;
+    box-sizing: border-box;
+    align-items: center;
+    z-index: 1; }
+    .rp-main .rp-content-event .rp-datebar .rp-datebar-label {
       position: absolute;
-      display: flex;
-      padding: 5px;
-      border-radius: 4px;
-      box-shadow: 0px -1px 0 0px inset rgba(55, 55, 55, 0.1);
-      background-color: #067aff;
-      box-sizing: border-box;
-      align-items: center;
-      z-index: 1; }
-      .rp-main .rp-content-event .rp-row .rp-datebar .rp-datebar-label {
+      padding: 1px 6px;
+      border-radius: 3px;
+      background: rgba(0, 0, 0, 0.3);
+      color: #ffffff;
+      max-width: 100%;
+      transition: 0.3s all ease;
+      position: sticky;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      z-index: 1;
+      left: calc(30% + 5px); }
+    .rp-main .rp-content-event .rp-datebar:hover:not(.rp-datebar-ghost) {
+      z-index: 2; }
+    .rp-main .rp-content-event .rp-datebar:hover .rp-datebar-label,
+    .rp-main .rp-content-event .rp-datebar:hover.rp-datebar-ghost + div .rp-datebar-label {
+      background: #000000;
+      max-width: unset;
+      overflow: unset;
+      z-index: 2; }
+    .rp-main .rp-content-event .rp-datebar.rp-datebar-ghost {
+      height: calc(100% - 21px);
+      background: repeating-linear-gradient(315deg, transparent, transparent 10px, #067aff 10px, #067aff 20px);
+      opacity: 0.175;
+      transition: 0.3s opacity ease; }
+      .rp-main .rp-content-event .rp-datebar.rp-datebar-ghost:hover {
+        opacity: 0.3; }
+    .rp-main .rp-content-event .rp-datebar.rp-datebar-nostart {
+      border-radius: 0 4px 4px 0; }
+      .rp-main .rp-content-event .rp-datebar.rp-datebar-nostart::after {
+        content: "";
         position: absolute;
-        padding: 1px 6px;
-        border-radius: 3px;
-        background: rgba(0, 0, 0, 0.3);
-        color: #ffffff;
-        max-width: 100%;
-        transition: 0.3s all ease;
-        position: sticky;
-        overflow: hidden;
-        white-space: nowrap;
-        text-overflow: ellipsis;
-        z-index: 1;
-        left: calc(30% + 5px); }
-      .rp-main .rp-content-event .rp-row .rp-datebar:hover .rp-datebar-label {
-        background: #000000;
-        max-width: unset;
-        overflow: unset;
-        z-index: 2; }
-      .rp-main .rp-content-event .rp-row .rp-datebar.rp-datebar-nostart {
-        border-radius: 0 4px 4px 0; }
-        .rp-main .rp-content-event .rp-row .rp-datebar.rp-datebar-nostart::after {
-          content: "";
-          position: absolute;
-          right: 100%;
-          height: 30px;
-          width: 30px;
-          transform: translate(50%, 0) rotate(45deg);
-          border-top-color: transparent;
-          border-right-color: transparent;
-          background: inherit; }
-      .rp-main .rp-content-event .rp-row .rp-datebar.rp-datebar-noend {
-        border-radius: 4px 0 0 4px; }
-        .rp-main .rp-content-event .rp-row .rp-datebar.rp-datebar-noend::before {
-          content: "";
-          position: absolute;
-          left: 100%;
-          height: 30px;
-          width: 30px;
-          transform: translate(-50%, 0) rotate(45deg);
-          border-top-color: transparent;
-          border-right-color: transparent;
-          background: inherit; }
-        .rp-main .rp-content-event .rp-row .rp-datebar.rp-datebar-noend.rp-datebar-nostart {
-          border-radius: 0; }
+        right: 100%;
+        height: 30px;
+        width: 30px;
+        transform: translate(50%, 0) rotate(45deg);
+        border-top-color: transparent;
+        border-right-color: transparent;
+        background: inherit; }
+    .rp-main .rp-content-event .rp-datebar.rp-datebar-noend {
+      border-radius: 4px 0 0 4px; }
+      .rp-main .rp-content-event .rp-datebar.rp-datebar-noend::before {
+        content: "";
+        position: absolute;
+        left: 100%;
+        height: 30px;
+        width: 30px;
+        transform: translate(-50%, 0) rotate(45deg);
+        border-top-color: transparent;
+        border-right-color: transparent;
+        background: inherit; }
+      .rp-main .rp-content-event .rp-datebar.rp-datebar-noend.rp-datebar-nostart {
+        border-radius: 0; }
   .rp-main .rp-content-resource .rp-label {
     max-width: max-content;
     max-width: fit-content; }

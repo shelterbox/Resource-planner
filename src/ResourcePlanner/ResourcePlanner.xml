@@ -6,12 +6,12 @@
   <icon />
   <properties>
     <!-- Planner -->
-    <property key="planner_name" type="string" required="true">
-      <caption>Planner name</caption>
+    <property key="plannerTitle" type="string" required="true">
+      <caption>Planner title</caption>
       <category>Planner</category>
       <description>String: Title for the resource planner</description>
     </property>
-    <property key="planner_description" type="string" required="true">
+    <property key="plannerDescription" type="string" required="true">
       <caption>Planner description</caption>
       <category>Planner</category>
       <description>String: Description for the resource planner</description>

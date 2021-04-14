@@ -1,15 +1,15 @@
 define([
-  "ResourcePlanner/lib/Planner",
-  "dojo/_base/declare",
-  "mxui/widget/_WidgetBase",
-  "mendix/lib/MxContext",
-  "dojo/_base/lang",
+  'ResourcePlanner/lib/Planner',
+  'dojo/_base/declare',
+  'mxui/widget/_WidgetBase',
+  'mendix/lib/MxContext',
+  'dojo/_base/lang',
 ], function (planner, declare, _WidgetBase, MxContext, lang) {
-  "use strict";
+  'use strict';
 
   var ResourcePlanner = planner.ResourcePlanner;
 
-  return declare("ResourcePlanner.widget.ResourcePlanner", [_WidgetBase], {
+  return declare('ResourcePlanner.widget.ResourcePlanner', [_WidgetBase], {
     // Internal variables
     _handles: null,
     _contextObj: null,
@@ -48,8 +48,8 @@ define([
     groups: null,
 
     // Planner
-    planner_name: null,
-    planner_description: null,
+    plannerTitle: null,
+    plannerDescription: null,
 
     // Global variables
     planner: null,
@@ -94,10 +94,10 @@ define([
       var context = this;
       return new Promise((resolve, reject) => {
         var path = context._splitPath(attribute);
-        if (path.attribute == null || path.attribute == "")
+        if (path.attribute == null || path.attribute == '')
           resolve(null);
         else {
-          if (path.path == null || path.path == "") resolve(mxObject);
+          if (path.path == null || path.path == '') resolve(mxObject);
           else
             mxObject.fetch(path.path, (result) => {
               resolve(result);
@@ -107,12 +107,12 @@ define([
     },
 
     _splitPath: function (string_path) {
-      if (string_path == "" || string_path == null)
+      if (string_path == '' || string_path == null)
         return { path: null, attribute: null };
       var obj = new Object();
-      obj.path = string_path.split("/");
+      obj.path = string_path.split('/');
       obj.attribute = obj.path.pop();
-      obj.path = obj.path.join("/");
+      obj.path = obj.path.join('/');
       return obj;
     },
 
@@ -132,15 +132,15 @@ define([
         e.stopPropagation();
         context._showPage(entity, guid, page, pageLocation);
       }
-      node.addEventListener("click", showPage);
-      node.style["cursor"] = "pointer";
+      node.addEventListener('click', showPage);
+      node.style['cursor'] = 'pointer';
     },
 
     _displayTemplate: function (node, entity, guid, page) {
       var entityContext = new MxContext();
       entityContext.setContext(entity, guid);
       mx.ui.openForm(page, {
-        location: "content",
+        location: 'content',
         context: entityContext,
         domNode: node,
       });
@@ -210,16 +210,16 @@ define([
           grouping.rowColour = fetch_groupRowColour.string;
           // Group type
           var fetch_groupType = await context._fetchString(mxObject_event, group.group_type);
-          grouping.type = fetch_groupType.string && fetch_groupType.string != "" ? fetch_groupType.string : group.group_type_default;
+          grouping.type = fetch_groupType.string && fetch_groupType.string != '' ? fetch_groupType.string : group.group_type_default;
           // Group colour
           var fetch_groupColour = await context._fetchString(mxObject_event, group.group_colour);
           grouping.colour = fetch_groupColour.string;
           // Event start date
           var fetch_groupStartDate = await context._fetchString(mxObject_event, group.group_startDate);
-          grouping.startDate = fetch_groupStartDate.string != "" && fetch_groupStartDate.string != null ? new Date(fetch_groupStartDate.string) : null;
+          grouping.startDate = fetch_groupStartDate.string != '' && fetch_groupStartDate.string != null ? new Date(fetch_groupStartDate.string) : null;
           // Event end date
           var fetch_groupEndDate = await context._fetchString(mxObject_event, group.group_endDate);
-          grouping.endDate = fetch_groupEndDate.string != "" && fetch_groupEndDate.string != null ? new Date(fetch_groupEndDate.string) : null;
+          grouping.endDate = fetch_groupEndDate.string != '' && fetch_groupEndDate.string != null ? new Date(fetch_groupEndDate.string) : null;
           // Group form
           grouping.resource_form = group.group_resource_form;
           grouping.resource_form_location = group.group_resource_form_location;
@@ -260,10 +260,10 @@ define([
         }
         // Event start date
         var fetch_eventStartDate = await context._fetchString(mxObject_event, context.event_startDate);
-        event.startDate = fetch_eventStartDate.string != "" && fetch_eventStartDate != null ? new Date(fetch_eventStartDate.string) : null;
+        event.startDate = fetch_eventStartDate.string != '' && fetch_eventStartDate != null ? new Date(fetch_eventStartDate.string) : null;
         // Event end date
         var fetch_eventEndDate = await context._fetchString(mxObject_event, context.event_endDate);
-        event.endDate = fetch_eventEndDate.string != "" && fetch_eventEndDate != null ? new Date(fetch_eventEndDate.string) : null;
+        event.endDate = fetch_eventEndDate.string != '' && fetch_eventEndDate != null ? new Date(fetch_eventEndDate.string) : null;
         // Event colour
         var fetchEvent_colour = await context._fetchString(mxObject_event, context.event_colour);
         event.colour = fetchEvent_colour.string;
@@ -356,7 +356,7 @@ define([
                   // Check button is for the group (by index)
                   if (config.action_index == index) {
                     // Setup microflow action
-                    if (config.action_type === "microflow") action = function (button) {
+                    if (config.action_type === 'microflow') action = function (button) {
                       context._execMf(config.action_microflow, group.object.getGuid(), async function (mfObjects) {
                         if (mfObjects) {
                           var data = await context.fetchData(mfObjects[0]);
@@ -365,8 +365,8 @@ define([
                       })
                     }
                     // Setup page action
-                    else if (config.action_type === "page") action = function (button) {
-                      context._showPage(context._splitPath(group.name).path.split("/").pop(), group.object.getGuid(), config.action_form, config.action_form_location);
+                    else if (config.action_type === 'page') action = function (button) {
+                      context._showPage(context._splitPath(group.name).path.split('/').pop(), group.object.getGuid(), config.action_form, config.action_form_location);
                     }
                     // Add button
                     objContext.addButton({
@@ -378,10 +378,10 @@ define([
                       hideText: config.text_visibility
                     });
                     // Decide if to remove button
-                    if ((config.visibility === "empty" && (objContext.groupEvent.startDate || objContext.groupEvent.endDate)) || (config.visibility === "one" && !(objContext.groupEvent.startDate || objContext.groupEvent.endDate))) {
+                    if ((config.visibility === 'empty' && (objContext.groupEvent.startDate || objContext.groupEvent.endDate)) || (config.visibility === 'one' && !(objContext.groupEvent.startDate || objContext.groupEvent.endDate))) {
                       objContext.removeButton(btnIndex);
                     }
-                    else if (config.visibility === "attribute") {
+                    else if (config.visibility === 'attribute') {
                       if (config.visibility_bool) {
                         let tempBtnIndex = btnIndex;
                         context._fetchString(event.object, config.visibility_bool)
@@ -398,46 +398,46 @@ define([
           }
 
           // Set glyphicon group
-          if (group.name != "" && group.name != null && group.icon && !objContext.resourceRow.getAttribute("data-icon")) {
-            let node = objContext.resourceRow.firstElementChild.querySelector("#name");
-            let iconNode = document.createElement("span");
-            let nameNode = document.createElement("span");
-            nameNode.setAttribute("id", "name");
+          if (group.name != '' && group.name != null && group.icon && !objContext.resourceRow.getAttribute('data-icon')) {
+            let node = objContext.resourceRow.firstElementChild.querySelector('#name');
+            let iconNode = document.createElement('span');
+            let nameNode = document.createElement('span');
+            nameNode.setAttribute('id', 'name');
             nameNode.innerText = node.innerText;
             node.innerText = null;
-            node.removeAttribute("id");
-            iconNode.classList.add("glyphicon", "spacing-outer-right", "glyphicon-" + group.icon);
-            node.insertAdjacentElement("afterbegin", iconNode);
-            node.insertAdjacentElement("beforeend", nameNode);
-            objContext.resourceRow.setAttribute("data-icon", "true");
+            node.removeAttribute('id');
+            iconNode.classList.add('glyphicon', 'spacing-outer-right', 'glyphicon-' + group.icon);
+            node.insertAdjacentElement('afterbegin', iconNode);
+            node.insertAdjacentElement('beforeend', nameNode);
+            objContext.resourceRow.setAttribute('data-icon', 'true');
           }
 
           // Add edit page listener group resource
-          if (group.name != "" && group.name != null && group.resource_form && !objContext.resourceRow.getAttribute("data-event")) {
-            let node = objContext.resourceRow.firstElementChild.querySelector("div.rp-label.rp-label-subtitle");
+          if (group.name != '' && group.name != null && group.resource_form && !objContext.resourceRow.getAttribute('data-event')) {
+            let node = objContext.resourceRow.firstElementChild.querySelector('div.rp-label.rp-label-subtitle');
             context._addOpenPage(
               node,
-              context._splitPath(group.name).path.split("/").pop(),
+              context._splitPath(group.name).path.split('/').pop(),
               group.object.getGuid(),
               group.resource_form,
               group.resource_form_location
             );
-            node.classList.add("btn-link", "text-primary");
-            objContext.resourceRow.setAttribute("data-event", "true");
+            node.classList.add('btn-link', 'text-primary');
+            objContext.resourceRow.setAttribute('data-event', 'true');
           }
 
           // Add edit page listener group event
-          if (group.name != "" && group.name != null && group.event_form && !objContext.groupEvent.node.getAttribute("data-event")) {
+          if (group.name != '' && group.name != null && group.event_form && !objContext.groupEvent.node.getAttribute('data-event')) {
             let node = objContext.groupEvent.node;
             context._addOpenPage(
               node,
-              context._splitPath(group.name).path.split("/").pop(),
+              context._splitPath(group.name).path.split('/').pop(),
               group.object.getGuid(),
               group.event_form,
               group.event_form_location
             );
-            node.classList.add("rp-eventListener");
-            objContext.groupEvent.node.setAttribute("data-event", "true");
+            node.classList.add('rp-eventListener');
+            objContext.groupEvent.node.setAttribute('data-event', 'true');
           }
         }
 
@@ -467,7 +467,7 @@ define([
           for (var conf of context.resource_buttons) {
             (function (config) {
               // Setup microflow action
-              if (config.action_type === "microflow") action = function (button) {
+              if (config.action_type === 'microflow') action = function (button) {
                 context._execMf(config.action_microflow, resource.object.getGuid(), async function (mfObjects) {
                   if (mfObjects) {
                     var data = await context.fetchData(mfObjects[0]);
@@ -476,8 +476,8 @@ define([
                 })
               }
               // Setup page action
-              else if (config.action_type === "page") action = function (button) {
-                context._showPage(context._splitPath(context.resource_name).path.split("/").pop(), resource.object.getGuid(), config.action_form, config.action_form_location);
+              else if (config.action_type === 'page') action = function (button) {
+                context._showPage(context._splitPath(context.resource_name).path.split('/').pop(), resource.object.getGuid(), config.action_form, config.action_form_location);
               }
               // Add button
               resourceObj.addButton({
@@ -488,10 +488,10 @@ define([
                 onClick: action,
                 hideText: config.text_visibility
               });
-              if ((config.visibility === "empty" && resourceObj.events.filter(event => event.startDate || event.endDate).length != 0) || (config.visibility === "one" && resourceObj.events.filter(event => event.startDate || event.endDate).length == 0)) {
+              if ((config.visibility === 'empty' && resourceObj.events.filter(event => event.startDate || event.endDate).length != 0) || (config.visibility === 'one' && resourceObj.events.filter(event => event.startDate || event.endDate).length == 0)) {
                 resourceObj.removeButton(btnIndex);
               }
-              else if (config.visibility === "attribute") {
+              else if (config.visibility === 'attribute') {
                 if (config.visibility_bool) {
                   let tempBtnIndex = btnIndex;
                   context._fetchString(event.object, config.visibility_bool)
@@ -506,83 +506,55 @@ define([
         }
 
         // Set glyphicon resource
-        if (context.resource_icon && !resourceObj.resourceRow.getAttribute("data-icon")) {
-          let node = resourceObj.resourceRow.firstElementChild.querySelector("#name");
-          let iconNode = document.createElement("span");
-          let nameNode = document.createElement("span");
-          nameNode.setAttribute("id", "name");
+        if (context.resource_icon && !resourceObj.resourceRow.getAttribute('data-icon')) {
+          let node = resourceObj.resourceRow.firstElementChild.querySelector('#name');
+          let iconNode = document.createElement('span');
+          let nameNode = document.createElement('span');
+          nameNode.setAttribute('id', 'name');
           nameNode.innerText = node.innerText;
           node.innerText = null;
-          node.removeAttribute("id");
-          iconNode.classList.add("glyphicon", "spacing-outer-right", "glyphicon-" + context.resource_icon);
-          node.insertAdjacentElement("afterbegin", iconNode);
-          node.insertAdjacentElement("beforeend", nameNode);
-          resourceObj.resourceRow.setAttribute("data-icon", "true");
+          node.removeAttribute('id');
+          iconNode.classList.add('glyphicon', 'spacing-outer-right', 'glyphicon-' + context.resource_icon);
+          node.insertAdjacentElement('afterbegin', iconNode);
+          node.insertAdjacentElement('beforeend', nameNode);
+          resourceObj.resourceRow.setAttribute('data-icon', 'true');
         }
 
         // Add edit page listener resource
-        if (context.resource_form && !resourceObj.resourceRow.getAttribute("data-event")) {
-          let node = resourceObj.resourceRow.firstElementChild.querySelector("div.rp-label.rp-label-subtitle");
+        if (context.resource_form && !resourceObj.resourceRow.getAttribute('data-event')) {
+          let node = resourceObj.resourceRow.firstElementChild.querySelector('div.rp-label.rp-label-subtitle');
           context._addOpenPage(
             node,
-            context._splitPath(context.resource_name).path.split("/").pop(),
+            context._splitPath(context.resource_name).path.split('/').pop(),
             resource.object.getGuid(),
             context.resource_form,
             context.resource_form_location
           );
-          node.classList.add("btn-link", "text-primary");
-          resourceObj.resourceRow.setAttribute("data-event", "true");
+          node.classList.add('btn-link', 'text-primary');
+          resourceObj.resourceRow.setAttribute('data-event', 'true');
         }
 
         // Add edit page listener event
-        if (context.event_form && !eventObj.node.getAttribute("data-event")) {
+        if (context.event_form && !eventObj.node.getAttribute('data-event')) {
           let node = eventObj.node;
           context._addOpenPage(
             node,
-            context._splitPath(context.event).path.split("/").pop(),
+            context._splitPath(context.event).path.split('/').pop(),
             event.object.getGuid(),
             context.event_form,
             context.event_form_location
           );
-          eventObj.node.setAttribute("data-event", "true");
+          eventObj.node.setAttribute('data-event', 'true');
         }
       }
     },
 
     generateXPath: function () {
       var context = this;
-      var xpathStart =
-        "[" +
-        context.event_startDate +
-        " >= " +
-        context.planner.dateFrom.valueOf() +
-        " or " +
-        context.event_endDate +
-        " >= " +
-        context.planner.dateFrom.valueOf() +
-        "]";
-      var xpathEnd =
-        "[" +
-        context.event_startDate +
-        " <= " +
-        (context.planner.dateTo.valueOf() + 1000 * 60 * 60 * 23) +
-        " or " +
-        context.event_endDate +
-        " <= " +
-        (context.planner.dateTo.valueOf() + 1000 * 60 * 60 * 23) +
-        "]";
-      var xpath =
-        "//" +
-        context.event +
-        (context.search_dateFilter ? xpathStart + xpathEnd : "") +
-        context.search_statXpath +
-        (context.search_dynXpath
-          ? context._contextObj.get(context.search_dynXpath)
-          : "");
-      xpath = xpath.replace(
-        /(\'\[\%CurrentObject\%\]\')/gi,
-        context._contextObj.getGuid()
-      );
+      var xpathStart = '[' + context.event_startDate + ' >= ' + context.planner.dateFrom.valueOf() + ' or ' + context.event_endDate + ' >= ' + context.planner.dateFrom.valueOf() + ']';
+      var xpathEnd = '[' + context.event_startDate + ' <= ' + (context.planner.dateTo.valueOf() + 1000 * 60 * 60 * 23) + ' or ' + context.event_endDate + ' <= ' + (context.planner.dateTo.valueOf() + 1000 * 60 * 60 * 23) + ']';
+      var xpath = '//' + context.event + (context.search_dateFilter ? xpathStart + xpathEnd : '') + context.search_statXpath + (context.search_dynXpath ? context._contextObj.get(context.search_dynXpath) : '');
+      xpath = xpath.replace(/(\'\[\%CurrentObject\%\]\')/gi, context._contextObj.getGuid());
       return xpath;
     },
 
@@ -627,7 +599,7 @@ define([
             },
           });
         } catch (e) {
-          reject("Error: Could not fetch data");
+          reject('Error: Could not fetch data');
         }
       });
     },
@@ -635,73 +607,67 @@ define([
     render: function () {
       var context = this;
       // Instantiate dates
-      var fromDate = this._contextObj.get(this.search_dateFrom);
-      var toDate = this._contextObj.get(this.search_dateTo);
-      this.obj_dateFrom =
-        fromDate != "" && fromDate != null ? new Date(fromDate) : null;
-      this.obj_dateTo =
-        toDate != "" && toDate != null ? new Date(toDate) : null;
+      var rawFromDate = this._contextObj.get(this.search_dateFrom);
+      var rawToDate = this._contextObj.get(this.search_dateTo);
+      var fromDate = rawFromDate != '' && rawFromDate != null ? new Date(rawFromDate) : null;
+      var toDate = rawToDate != '' && rawToDate != null ? new Date(rawToDate) : null;
       // Remove existing subscriptions
-      this.subscribed.forEach((subscription) =>
+      this.subscribed.forEach(function(subscription) {
         mx.data.unsubscribe(subscription.subscription)
-      );
+      });
       this.subscribed = new Array();
       // Setup planner
-      var plannerTitle = this.planner_name
-        ? this.planner_name
-        : "Planner";
-      var plannerDescription = this.planner_description
-        ? this.planner_description
-        : "Plan events";
-      if (
-        this.obj_dateFrom &&
-        this.obj_dateTo &&
-        this.obj_dateFrom.valueOf() < this.obj_dateTo.valueOf()
-      ) {
+      if (fromDate && toDate && fromDate.valueOf() < toDate.valueOf()) {
+        // Remove any errors
         this._hideErrorMessage();
-        if (this.planner)
-          this.planner.setDates(this.obj_dateFrom, this.obj_dateTo);
-        else
+        // Ensure the planner exists
+        if (this.planner) {
+          this.planner.setDates(fromDate, toDate);
+        } else {
+          this.plannerNode = document.createElement('div');
+          this.plannerNode.style['height'] = '100%';
+          this.domNode.insertAdjacentElement('afterBegin', this.plannerNode);
           this.planner = new ResourcePlanner(
-            this.domNode,
-            this.obj_dateFrom,
-            this.obj_dateTo,
-            plannerTitle,
-            plannerDescription
+            this.plannerNode,
+            fromDate,
+            toDate,
+            this.plannerTitle,
+            this.plannerDescription
           );
-        this.planner.resourceColumnName = this.resource_column_title
-          ? this.resource_column_title
-          : "Data";
-        this.planner.resourceColumnHTML = this.resource_column_HTML
-          ? this.resource_column_HTML
-          : this.planner.resourceColumnName;
+        }
+        // Update additional properties
+        this.planner.resourceColumnName = this.resource_column_title ? this.resource_column_title : 'Data';
+        this.planner.resourceColumnHTML = this.resource_column_HTML ? this.resource_column_HTML : this.planner.resourceColumnName;
         this.planner.render();
         // Render inital table
         var pid = mx.ui.showProgress();
-        context
-          .fetchAllData()
-          .then((dataList) => mx.ui.hideProgress(pid))
-          .catch((reason) => {
+        context.fetchAllData()
+          .then(function(dataList) {
+            mx.ui.hideProgress(pid);
+          }).catch(function(reason) {
             console.error(reason);
             this._showErrorMessage(reason);
           });
       } else {
-        this._showErrorMessage("Error: Invalid date range");
+        this._showErrorMessage('Error: Invalid date range');
       }
     },
 
+    // Step 1
     constructor: function () {
       this._handles = [];
     },
 
+    // Step 2
     postCreate: function () {
-      logger.debug(this.id + ".postCreate");
+      logger.debug(this.id + '.postCreate');
     },
 
+    // Step 3
     update: function (obj, callback) {
       var context = this;
 
-      logger.debug(this.id + ".update");
+      logger.debug(this.id + '.update');
 
       this._contextObj = obj;
       this._updateRendering(callback);
@@ -715,11 +681,11 @@ define([
     },
 
     resize: function (box) {
-      logger.debug(this.id + ".resize");
+      logger.debug(this.id + '.resize');
     },
 
     uninitialize: function () {
-      logger.debug(this.id + ".uninitialize");
+      logger.debug(this.id + '.uninitialize');
       if (this.subscribed instanceof Array) {
         // Remove existing subscriptions
         this.subscribed.forEach((sub) =>
@@ -730,33 +696,42 @@ define([
 
     _showErrorMessage: function (message) {
       if (this.domNode instanceof HTMLElement) {
-        var element = this.domNode.querySelector("div#error");
+        var element = this.domNode.querySelector('div#error');
         if (element instanceof HTMLElement) {
           element.innerText = message;
         } else {
-          element = document.createElement("div");
+          element = document.createElement('div');
           element.innerText = message;
           element.classList.add(
-            "alert",
-            "alert-danger",
-            "text-center"
+            'alert',
+            'alert-danger',
+            'text-center'
           );
-          element.setAttribute("id", "error");
-          this.domNode.appendChild(element);
+          element.setAttribute('id', 'error');
+          this.domNode.insertAdjacentElement('afterBegin', element);
         }
+      }
+      if (this.plannerNode instanceof HTMLElement) {
+        // Hide the planner
+        this.plannerNode.style['display'] = 'none';
       }
     },
 
     _hideErrorMessage: function () {
       if (this.domNode instanceof HTMLElement) {
-        var element = this.domNode.querySelector("div#error");
+        var element = this.domNode.querySelector('div#error');
         if (element instanceof HTMLElement)
           this.domNode.removeChild(element);
       }
+      if (this.plannerNode instanceof HTMLElement) {
+        // Show the planner
+        this.plannerNode.style['display'] = null;
+      }
     },
 
+    // Step 4: Update rendering
     _updateRendering: function (callback) {
-      logger.debug(this.id + "._updateRendering");
+      logger.debug(this.id + '._updateRendering');
 
       // if (this._contextObj !== null) {
       //     dojoStyle.set(this.domNode, 'display', 'block');
@@ -764,22 +739,22 @@ define([
       //     dojoStyle.set(this.domNode, 'display', 'none');
       // }
 
-      this._executeCallback(callback, "_updateRendering");
+      this._executeCallback(callback, '_updateRendering');
     },
 
     // Shorthand for running a microflow
     _execMf: function (mf, guid, cb) {
-      logger.debug(this.id + "._execMf");
+      logger.debug(this.id + '._execMf');
       if (mf && guid) {
         mx.ui.action(
           mf,
           {
             params: {
-              applyto: "selection",
+              applyto: 'selection',
               guids: [guid],
             },
             callback: lang.hitch(this, function (objs) {
-              if (cb && typeof cb === "function") {
+              if (cb && typeof cb === 'function') {
                 cb(objs);
               }
             }),
@@ -795,13 +770,13 @@ define([
     // Shorthand for executing a callback, adds logging to your inspector
     _executeCallback: function (cb, from) {
       logger.debug(
-        this.id + "._executeCallback" + (from ? " from " + from : "")
+        this.id + '._executeCallback' + (from ? ' from ' + from : '')
       );
-      if (cb && typeof cb === "function") {
+      if (cb && typeof cb === 'function') {
         cb();
       }
     },
   });
 });
 
-require(["ResourcePlanner/widget/ResourcePlanner"]);
+require(['ResourcePlanner/widget/ResourcePlanner']);
