@@ -3,10 +3,15 @@
   overflow: hidden; }
   .rp-main-wrapper > .rp-main-control {
     position: absolute;
+    display: flex;
     bottom: 0;
     right: 0;
     margin: 25px;
     z-index: 4; }
+    .rp-main-wrapper > .rp-main-control > * {
+      margin-right: 5px; }
+      .rp-main-wrapper > .rp-main-control > *:last-child {
+        margin-right: 0; }
 
 .rp-btn {
   background: #ffffff;
@@ -18,7 +23,7 @@
   min-height: 26px;
   padding: 0 10px !important;
   font-size: 0.75em !important; }
-  .rp-btn:hover {
+  .rp-btn.active, .rp-btn:active, .rp-btn:hover {
     background: #aaaaaa; }
 
 .rp-btn-group {

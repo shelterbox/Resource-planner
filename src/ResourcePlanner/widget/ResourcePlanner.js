@@ -158,6 +158,7 @@ define([
         var fetchResoure_name = await context._fetchString(mxObject_event, context.resource_name);
         resource.object = fetchResoure_name.object;
         resource.name = fetchResoure_name.string;
+        resource.id = context.resource_uniqueName ? resource.object.getGuid() : resource.name
         // Resource description
         var fetchResoure_description = await context._fetchString(
           mxObject_event,
@@ -229,6 +230,7 @@ define([
           grouping.generateDate = group.group_generateDate;
           grouping.uniqueName = group.group_uniqueName;
           grouping.startButton = group.group_startButton;
+          grouping.id = grouping.uniqueName ? grouping.object.getGuid() : grouping.name;
           groups[index] = grouping;
 
           // Subscribe group changes
@@ -305,7 +307,6 @@ define([
           }
           context.subscribed.push(subscription);
         }
-
         // Create data object
         var data = {
           event: event,
@@ -316,8 +317,8 @@ define([
       }
       return null;
     },
-
-    renderData: function (data) {
+    
+    renderData: function (data, resetOrder = false) {
       var context = this;
 
       if (data && data instanceof Object) {
@@ -331,14 +332,14 @@ define([
           var group = groups[index];
           // Decide whether to use group or planner
           if (group.name) {
-            var groupIdentifier = group.uniqueName ? group.object.getGuid() : group.name;
             objContext = objContext.addGroup(
-              groupIdentifier,
+              group.id,
               group.name,
               group.description,
               group.type,
               group.colour
             );
+            if (resetOrder) objContext.order = 10000;
             objContext.colour = group.rowColour;
             if (!group.generateDate) {
               objContext.groupEvent.setDates(group.startDate, group.endDate);
@@ -442,12 +443,12 @@ define([
         }
 
         // Add resource and event to planner/group
-        var resourceIdentifier = context.resource_uniqueName ? resource.object.getGuid() : resource.name;
         var resourceObj = objContext.addResource(
-          resourceIdentifier,
+          resource.id,
           resource.name,
           resource.description
         );
+        if (resetOrder) resourceObj.order = 10000;
         resourceObj.colour = resource.rowColour;
         var eventObj = resourceObj.addEvent(
           event.object.getGuid(),
@@ -564,41 +565,47 @@ define([
       for (var x = 0; x < context.resource_sortBy.length; x++) {
         sortOrder.push(Object.values(context.resource_sortBy[x]));
       }
-      // sortOrder.push([context.event_startDate, 'asc']);
       return sortOrder;
     },
 
     fetchAllData: function () {
       var context = this;
+      // Mendix data
       var xpath = context.generateXPath();
       var sortOrder = context.generateSortOrder();
+      // Async (because of callback)
       return new Promise((resolve, reject) => {
         try {
+          // Get mendix data
           mx.data.get({
             xpath: xpath,
             filter: { sort: sortOrder },
-            callback: (events) => {
-              var dataList = new Array();
-              var itemNum = events.length;
-              if (events instanceof Array && events.length)
-                events.forEach((event, index) => {
-                  context
-                    .fetchData(event)
-                    .then((data) => {
-                      dataList[index] = data;
+            callback: function(events) {
+              // Make sure there are results
+              if (events instanceof Array && events.length) {
+                var currentData = new Array();
+                var itemNum = events.length;
+                // Loop through the results
+                events.forEach(function(event, index) {
+                  // Fetch finer detail
+                  context.fetchData(event)
+                    .then(function(data) {
+                      currentData[index] = data;
+                      // List has finished
                       if (--itemNum <= 0) {
-                        dataList.forEach((data) =>
-                          context.renderData(data)
-                        );
-                        resolve(dataList);
+                        resolve(currentData);
                       }
                     })
-                    .catch((reason) => reject(reason));
+                    .catch(function(reason) {
+                      reject(reason);
+                    });
                 });
-              else resolve();
+              } else {
+                resolve();
+              }
             },
           });
-        } catch (e) {
+        } catch (error) {
           reject('Error: Could not fetch data');
         }
       });
@@ -634,6 +641,8 @@ define([
             this.plannerTitle,
             this.plannerDescription
           );
+          // Set view options
+          this.planner.showEmptyResources = !this.search_dateFilter;
         }
         // Update additional properties
         this.planner.resourceColumnName = this.resource_column_title ? this.resource_column_title : 'Data';
@@ -643,6 +652,15 @@ define([
         var pid = mx.ui.showProgress();
         context.fetchAllData()
           .then(function(dataList) {
+            // If data is returned as a list...
+            if (dataList instanceof Array) {
+              // Loop through returned data
+              dataList.forEach(function(data, index) {
+                // Render new data
+                // TODO: CREATE SORT ORDER METHOD 'GROUP > GROUP > ... > RESOURCE'
+                context.renderData(data, true);
+              });
+            }
             mx.ui.hideProgress(pid);
           }).catch(function(reason) {
             console.error(reason);

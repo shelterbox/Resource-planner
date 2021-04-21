@@ -20,6 +20,9 @@ define(["require", "exports"], function (require, exports) {
     Date.prototype.daysBetween = function (date) {
         return Math.round(Math.abs((this.getTime() - date.getTime()) / 864E5));
     };
+    Date.prototype.getNormalisedDay = function () {
+        return this.getDay() === 0 ? 7 : this.getDay();
+    };
     Date.prototype.addMonths = function (months) {
         return new Date(this.setMonth(this.getMonth() + months));
     };
@@ -288,6 +291,16 @@ define(["require", "exports"], function (require, exports) {
             enumerable: true,
             configurable: true
         });
+        Object.defineProperty(PlannerResource.prototype, "hidden", {
+            get: function () { return this._hidden; },
+            set: function (value) {
+                this._hidden = value;
+                this.resourceRow.style['display'] = this._hidden ? 'none' : null;
+                this.eventRow.style['display'] = this._hidden ? 'none' : null;
+            },
+            enumerable: true,
+            configurable: true
+        });
         return PlannerResource;
     }());
     var PlannerGroup = /** @class */ (function (_super) {
@@ -472,14 +485,31 @@ define(["require", "exports"], function (require, exports) {
         };
         PlannerEvent.prototype.render = function () {
             // Render/re-render the bar
-            if ((!this.visualStartDate || !this.visualEndDate) || ((this._resource.planner.dateFrom.valueOf() > this.visualEndDate.valueOf() && this._resource.planner.dateFrom.valueOf() > this.visualStartDate.valueOf()) ||
-                (this._resource.planner.dateTo.valueOf() < this.visualStartDate.valueOf() && this._resource.planner.dateTo.valueOf() < this.visualEndDate.valueOf()) ||
-                (this.visualStartDate.valueOf() > this.visualEndDate.valueOf())) || this._show == false) {
+            if (this.hidden) {
                 // Don't display
                 this._node.style['display'] = 'none';
+                // If you don't want to show empty resources...
+                if (!this._resource.planner.showEmptyResources) {
+                    // Get events
+                    var allEvents = new Array;
+                    allEvents.push.apply(allEvents, this._resource.events);
+                    if (this._resource instanceof PlannerGroup && this._resource.groupEvent)
+                        allEvents.push(this._resource.groupEvent);
+                    // Hide resource if all events are already hidden
+                    if (allEvents.length === allEvents.filter(function (e) { return e.hidden; }).length) {
+                        this._resource.hidden = true;
+                    }
+                    else {
+                        this._resource.hidden = false;
+                    }
+                }
+                else {
+                    this._resource.hidden = false;
+                }
             }
             else {
                 // Do display
+                this._resource.hidden = false;
                 // Change propertires
                 this._node.style['display'] = 'flex';
                 var node = this._node.querySelector('#title');
@@ -636,6 +666,15 @@ define(["require", "exports"], function (require, exports) {
             enumerable: true,
             configurable: true
         });
+        Object.defineProperty(PlannerEvent.prototype, "hidden", {
+            get: function () {
+                return (!this.visualStartDate || !this.visualEndDate) || ((this._resource.planner.dateFrom.valueOf() > this.visualEndDate.valueOf() && this._resource.planner.dateFrom.valueOf() > this.visualStartDate.valueOf()) ||
+                    (this._resource.planner.dateTo.valueOf() < this.visualStartDate.valueOf() && this._resource.planner.dateTo.valueOf() < this.visualEndDate.valueOf()) ||
+                    (this.visualStartDate.valueOf() > this.visualEndDate.valueOf())) || this._show == false;
+            },
+            enumerable: true,
+            configurable: true
+        });
         PlannerEvent.prototype.setDates = function (startDate, endDate) {
             if ((startDate instanceof Date || startDate == null) && (endDate instanceof Date || endDate == null)) {
                 // Properties
@@ -677,6 +716,7 @@ define(["require", "exports"], function (require, exports) {
             this._resourceColumnName = 'Row title';
             this._resourceColumnPercent = 0.3;
             this._view = 'Daily';
+            this._showEmptyResources = false;
             // Relationships
             this._resources = new Array;
             this._previousGroups = new Array;
@@ -701,12 +741,34 @@ define(["require", "exports"], function (require, exports) {
         ResourcePlanner.prototype._generateDateLabels = function (wText) {
             if (wText === void 0) { wText = true; }
             var render = '';
-            var loopDate = new Date(this._dateFrom.getTime());
             var today = new Date().flatten();
-            for (var i = 0; i < this.daysBetween; i++) {
-                var dayClass = loopDate.valueOf() == today.valueOf() ? 'rp-label-today' : loopDate.getDay() == 6 || loopDate.getDay() == 0 ? 'rp-label-weekend' : '';
-                render += "\n      <div class='rp-label rp-label-subtitle rp-date " + dayClass + "' \n        style='width: " + this.datePercent * 100 + "%; text-align: center;'\n        title='" + loopDate.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) + "'\n      >\n        " + (wText ? loopDate.getDate() : '') + "\n      </div>\n      ";
-                loopDate = loopDate.addDays(1);
+            if (this.view === 'Daily') {
+                // Use this variable to render the days
+                var loopDate = this.dateFrom;
+                for (var i = 0; i < this.daysBetween; i++) {
+                    var dayClass = loopDate.valueOf() == today.valueOf() ? 'rp-label-today' : loopDate.getDay() == 6 || loopDate.getDay() == 0 ? 'rp-label-weekend' : '';
+                    render += "\n        <div class='rp-label rp-label-subtitle rp-date " + dayClass + "' \n          style='width: " + this.datePercent * 100 + "%; text-align: center;'\n          title='" + loopDate.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) + "'>\n          " + (wText ? loopDate.getDate() : '') + "\n        </div>\n        ";
+                    // Increment by a day
+                    loopDate.addDays(1);
+                }
+            }
+            else if (this.view === 'Weekly') {
+                // Use these variables to render the weeks
+                var loopWeekStart = this.dateFrom;
+                var loopWeekEnd = this.dateFrom;
+                loopWeekEnd.addDays((loopWeekEnd.getNormalisedDay() - 1) * -1);
+                loopWeekEnd.addDays(6);
+                for (var i = 0; i < this.weeksBetween; i++) {
+                    var dayClass = loopWeekStart.valueOf() <= today.valueOf() && loopWeekEnd.valueOf() >= today.valueOf() ? 'rp-label-today' : '';
+                    var weekPercentage = ((loopWeekStart.daysBetween(loopWeekEnd) + 1) * this.datePercent);
+                    render += "\n        <div class='rp-label rp-label-subtitle rp-date " + dayClass + "' \n          style='width: " + weekPercentage * 100 + "%; text-align: center;'\n          title='" + loopWeekStart.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) + " - " + loopWeekEnd.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) + "'>\n          " + (wText ? "Week " + (i + 1) : '') + "\n        </div>\n        ";
+                    // Increment by a week
+                    loopWeekStart.addDays((loopWeekStart.getNormalisedDay() - 1) * -1);
+                    loopWeekStart.addDays(7);
+                    loopWeekEnd.addDays(7);
+                    if (loopWeekEnd.valueOf() >= this.dateTo.valueOf())
+                        loopWeekEnd = this.dateTo;
+                }
             }
             return render;
         };
@@ -806,10 +868,11 @@ define(["require", "exports"], function (require, exports) {
             this.dispose();
             // Render initial table
             this._node.insertAdjacentHTML('afterbegin', "\n    <div class='rp-col rp-resources' style='width: " + this.resourceColumnPercent * 100 + "%;'>\n      <div class='rp-wrapper'>\n        <div class='rp-sticky'>\n          <div class='rp-row rp-row-spaced'>\n            <div class='rp-heading'>\n              <h3 class='rp-label rp-label-heading' id='rp-title'></h3>\n              <div class='rp-label rp-label-small' id='rp-description'></div>\n            </div>\n          </div>\n          <div class='rp-row rp-row-spaced'>\n            <div class='rp-label rp-label-subtitle' id='rp-resourceColumnName'></div>\n            <div class='rp-btn-group'>\n              <button id='rp-hideAll' class='btn rp-btn' title='Hide all'>Hide all</button>\n              <button id='rp-showAll' class='btn rp-btn' title='Show all'>Show all</button>\n            </div>\n          </div>\n        </div>\n        <div class='rp-content-resource'>\n\n        </div>\n      </div>\n    </div>\n    <div class='rp-col rp-events' style='width: " + this.eventColumnPercent * 100 + "%'>\n      <div class='rp-wrapper' style='width: " + this.zoomPercent * 100 + "%'>\n        <div class='rp-sticky'>\n          <div class='rp-row rp-row-spaced rp-row-label' id='rp-heading-monthLabels'>\n\n          </div>\n          <div class='rp-row rp-row-center rp-row-label' id='rp-heading-dateLabels'>\n\n          </div>\n        </div>\n        <div class='rp-content-event'>\n          <div class='rp-row' id='rp-event-dateLabels'>\n            \n          </div>\n        </div>\n      </div>\n    </div>\n    ");
-            this._controlNode.insertAdjacentHTML('beforeend', "\n    <div class='rp-btn-group'>\n      <button id='rp-zoomout' class='btn rp-btn' title='Zoom out'>-</button>\n      <button id='rp-reset' class='btn rp-btn' title='Reset'>" + this.zoomPercent * 100 + "%</button>\n      <button id='rp-zoomin' class='btn rp-btn' title='Zoom in'>+</button>\n    </div>\n    ");
             // Set properties
             this._eventColumn = this._node.querySelector('.rp-content-event');
             this._resourceColumn = this._node.querySelector('.rp-content-resource');
+            // Add zoom buttons to control node
+            this._controlNode.insertAdjacentHTML('beforeend', "\n    <div class='rp-btn-group'>\n      <button id='rp-zoomout' class='btn rp-btn' title='Zoom out'>-</button>\n      <button id='rp-reset' class='btn rp-btn' title='Reset'>" + this.zoomPercent * 100 + "%</button>\n      <button id='rp-zoomin' class='btn rp-btn' title='Zoom in'>+</button>\n    </div>\n    ");
             // Event zooming
             var zoomin = this._controlNode.querySelector('#rp-zoomin');
             var zoomout = this._controlNode.querySelector('#rp-zoomout');
@@ -829,6 +892,25 @@ define(["require", "exports"], function (require, exports) {
                 e.preventDefault();
                 e.stopPropagation();
                 _this.zoomPercent = 0;
+            });
+            // Add view buttons to control node
+            this._controlNode.insertAdjacentHTML('beforeend', "\n    <div class='rp-btn-group'>\n      <button id='rp-daily' class='btn rp-btn active' title='Daily'>Daily</button>\n      <button id='rp-weekly' class='btn rp-btn' title='Weekly'>Weekly</button>\n    </div>\n    ");
+            // View change
+            var daily = this._controlNode.querySelector('#rp-daily');
+            var weekly = this._controlNode.querySelector('#rp-weekly');
+            daily.addEventListener('click', function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                _this.view = 'Daily';
+                daily.classList.add('active');
+                weekly.classList.remove('active');
+            });
+            weekly.addEventListener('click', function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                _this.view = 'Weekly';
+                weekly.classList.add('active');
+                daily.classList.remove('active');
             });
             // Hide all
             var hideAll = this._node.querySelector('#rp-hideAll');
@@ -896,6 +978,8 @@ define(["require", "exports"], function (require, exports) {
                     resource.groupEvent.render();
                 }
             });
+            // Reset zoom percent
+            this.zoomPercent = 0;
         };
         ResourcePlanner.prototype.dispose = function () {
             this._node.innerHTML = '';
@@ -914,13 +998,48 @@ define(["require", "exports"], function (require, exports) {
             enumerable: true,
             configurable: true
         });
+        Object.defineProperty(ResourcePlanner.prototype, "view", {
+            get: function () { return this._view; },
+            set: function (value) {
+                this._view = value;
+                this.render();
+            },
+            enumerable: true,
+            configurable: true
+        });
         Object.defineProperty(ResourcePlanner.prototype, "daysBetween", {
             get: function () { return this._dateFrom.daysBetween(this._dateTo) + 1; },
             enumerable: true,
             configurable: true
         });
+        Object.defineProperty(ResourcePlanner.prototype, "weeksBetween", {
+            get: function () {
+                var fromWeekStart = this.dateFrom.addDays((this.dateFrom.getNormalisedDay() - 1) * -1);
+                var toWeekEnd = this.dateTo.addDays((this.dateTo.getNormalisedDay() - 1) * -1).addDays(6);
+                return (fromWeekStart.daysBetween(toWeekEnd) + 1) / 7;
+            },
+            enumerable: true,
+            configurable: true
+        });
         Object.defineProperty(ResourcePlanner.prototype, "monthsBetween", {
             get: function () { return this._dateFrom.monthsBetween(this._dateTo) + 1; },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(ResourcePlanner.prototype, "showEmptyResources", {
+            get: function () { return this._showEmptyResources; },
+            set: function (value) {
+                this._showEmptyResources = value;
+                // Re-render all events
+                this.allResources().forEach(function (r) {
+                    r.events.forEach(function (e) { return e.render(); });
+                });
+                ResourcePlanner.allGroups(this).forEach(function (r) {
+                    r.events.forEach(function (e) { return e.render(); });
+                    if (r.groupEvent)
+                        r.groupEvent.render();
+                });
+            },
             enumerable: true,
             configurable: true
         });
@@ -1004,7 +1123,7 @@ define(["require", "exports"], function (require, exports) {
             set: function (percentage) {
                 // Default
                 if (percentage == 0)
-                    percentage = Math.floor(this.daysBetween / 30) + 1;
+                    percentage = (this._view === 'Daily' ? Math.floor(this.daysBetween / 30) : Math.floor(this.weeksBetween / 16)) + 1;
                 // Above 100%
                 if (percentage >= 1) {
                     this._zoomPercent = percentage;
@@ -1025,7 +1144,6 @@ define(["require", "exports"], function (require, exports) {
             if (!this._dateFrom || !this._dateTo || newStartDate.valueOf() !== this._dateFrom.valueOf() || newEndDate.valueOf() !== this._dateTo.valueOf()) {
                 this._dateFrom = newStartDate;
                 this._dateTo = newEndDate;
-                this.zoomPercent = 0;
                 this.render();
                 return true;
             }
